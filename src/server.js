@@ -12,7 +12,10 @@ const path = require('path');
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve static files from React app (Frontend)
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+app.use('/public', express.static(path.join(__dirname, '../public'))); // Keep old public as fallback or for specific assets
 
 // Database Connection
 connectDB().then(() => {
@@ -23,9 +26,9 @@ connectDB().then(() => {
 // Routes
 app.use('/api', apiRoutes);
 
-// Health Check
-app.get('/', (req, res) => {
-  res.send('API de Agendamentos is running...');
+// Catch-all handler for SPA (React)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 const PORT = process.env.PORT || 3000;

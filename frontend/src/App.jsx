@@ -78,6 +78,7 @@ function App() {
 
       // Check URL for direct access
       const path = window.location.pathname;
+      const hostname = window.location.hostname;
       
       // Force logout if explicitly visiting /login
       if (path === '/login') {
@@ -89,7 +90,8 @@ function App() {
           return;
       }
 
-      if (path === '/admin') {
+      // Check for admin path or subdomain
+      if (path === '/admin' || hostname.startsWith('admin.')) {
           setView('LOGIN');
       }
 
