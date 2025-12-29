@@ -82,41 +82,25 @@ const Agenda = () => {
             
             // Map to Calendar Events
             const mappedEvents = res.data.map(app => {
-                // Parse start and end times
-                // We handle both full ISO strings (Date objects) and legacy "HH:mm" strings
-                
-                let start, end;
-                
-                // Try parsing as ISO Date first
-                const startTimeDate = new Date(app.startTime);
-                
-                if (!isNaN(startTimeDate.getTime()) && app.startTime.includes('T')) {
-                    // It is a full ISO date string
-                    start = startTimeDate;
-                    
-                    if (app.endTime) {
-                         const endTimeDate = new Date(app.endTime);
-                         end = !isNaN(endTimeDate.getTime()) ? endTimeDate : new Date(start.getTime() + 60 * 60000);
+                let start = new Date(app.startTime);
+                let end = new Date(app.endTime);
+
+                // Validate Start Time
+                if (isNaN(start.getTime())) {
+                    // Fallback: Try to construct from date + simple string time if available (unlikely in this schema but safe)
+                    if (app.date) {
+                         start = new Date(app.date);
                     } else {
-                         // Fallback duration
-                         const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 60;
-                         end = new Date(start.getTime() + duration * 60000);
+                         start = new Date();
                     }
-                } else if (app.startTime && app.startTime.includes && app.startTime.includes(':')) {
-                    // Fallback: It's likely a string "HH:mm" combined with app.date
-                    start = parseISO(`${app.date.split('T')[0]}T${app.startTime}`);
-                    
-                    const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 60;
-                    end = new Date(start.getTime() + duration * 60000);
-                } else {
-                    // Fallback: Use date only (all day or default time?)
-                    start = new Date(app.date);
-                    end = new Date(start.getTime() + 60 * 60000);
                 }
 
-                // Safety check
-                if (isNaN(start.getTime())) start = new Date();
-                if (isNaN(end.getTime())) end = new Date(start.getTime() + 60 * 60000);
+                // Validate End Time
+                if (isNaN(end.getTime())) {
+                     // Calculate duration from services
+                     const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 30;
+                     end = new Date(start.getTime() + duration * 60000);
+                }
 
                 return {
                     id: app._id,
