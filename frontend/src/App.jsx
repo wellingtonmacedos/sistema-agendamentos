@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { format, addDays, startOfToday } from 'date-fns';
+import { format, addDays, startOfToday, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Send, User, Users, Calendar, Clock, Scissors, CheckCircle, Store, Briefcase, Lock } from 'lucide-react';
 import clsx from 'clsx';
@@ -314,7 +314,11 @@ function App() {
   };
 
   const handleDateSelect = async (dateStr) => {
-    const formattedDate = format(new Date(dateStr), 'dd/MM/yyyy');
+    // Parse the date string as local date (yyyy-MM-dd) to avoid UTC shift
+    // We append T00:00:00 to force local time parsing if needed, or just use parse
+    const dateObj = parse(dateStr, 'yyyy-MM-dd', new Date());
+    const formattedDate = format(dateObj, 'dd/MM/yyyy');
+    
     addMessage(formattedDate, 'user');
     setBooking(prev => ({ ...prev, date: dateStr }));
     
@@ -371,7 +375,7 @@ function App() {
         telefone: booking.clientPhone
       });
       
-      addMessage(`Agendamento Confirmado! 🎉\n${booking.service.name} com ${booking.professional.name}\nDia ${format(new Date(booking.date), 'dd/MM')} às ${booking.time}.`);
+      addMessage(`Agendamento Confirmado! 🎉\n${booking.service.name} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
       setStep('SUCCESS');
     } catch (err) {
       addMessage('Ocorreu um erro ao finalizar. Tente novamente.');
@@ -472,11 +476,12 @@ function App() {
         return (
           <div className="flex gap-2 overflow-x-auto pb-2">
             {dates.map(d => {
-                const isSelected = booking.date === d.toISOString().split('T')[0];
+                const dateStr = format(d, 'yyyy-MM-dd');
+                const isSelected = booking.date === dateStr;
                 return (
                   <button 
                     key={d.toString()} 
-                    onClick={() => handleDateSelect(d.toISOString().split('T')[0])}
+                    onClick={() => handleDateSelect(dateStr)}
                     className={clsx(
                         "flex-shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border transition-all"
                     )}
@@ -527,7 +532,7 @@ function App() {
                     <p><span className="text-gray-500">Telefone:</span> {booking.clientPhone}</p>
                     <p><span className="text-gray-500">Serviço:</span> {booking.service?.name}</p>
                     <p><span className="text-gray-500">Profissional:</span> {booking.professional?.name}</p>
-                    <p><span className="text-gray-500">Data:</span> {booking.date && format(new Date(booking.date), 'dd/MM/yyyy')} às {booking.time}</p>
+                    <p><span className="text-gray-500">Data:</span> {booking.date && format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')} às {booking.time}</p>
                     <p><span className="text-gray-500">Total:</span> R$ {booking.service?.price.toFixed(2)}</p>
                 </div>
                 <button 

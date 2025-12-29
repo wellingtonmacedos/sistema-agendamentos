@@ -83,31 +83,39 @@ const Agenda = () => {
             // Map to Calendar Events
             const mappedEvents = res.data.map(app => {
                 // Parse start and end times
-                // Assuming app.date is YYYY-MM-DD and app.startTime is HH:mm
-                // But schema has date: Date, startTime: String (sometimes) or Date.
-                // Let's rely on startTime if it is a full date string, or combine.
-                
-                // From previous context: startTime is String "HH:mm" in some places, 
-                // but in schema it might be Date.
-                // Let's check how we display it: app.startTime.
-                // If it is "HH:mm", we need to combine with app.date.
+                // We handle both full ISO strings (Date objects) and legacy "HH:mm" strings
                 
                 let start, end;
-                if (app.startTime && app.startTime.includes && app.startTime.includes(':')) {
-                    // It's likely a string "HH:mm"
+                
+                // Try parsing as ISO Date first
+                const startTimeDate = new Date(app.startTime);
+                
+                if (!isNaN(startTimeDate.getTime()) && app.startTime.includes('T')) {
+                    // It is a full ISO date string
+                    start = startTimeDate;
+                    
+                    if (app.endTime) {
+                         const endTimeDate = new Date(app.endTime);
+                         end = !isNaN(endTimeDate.getTime()) ? endTimeDate : new Date(start.getTime() + 60 * 60000);
+                    } else {
+                         // Fallback duration
+                         const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 60;
+                         end = new Date(start.getTime() + duration * 60000);
+                    }
+                } else if (app.startTime && app.startTime.includes && app.startTime.includes(':')) {
+                    // Fallback: It's likely a string "HH:mm" combined with app.date
                     start = parseISO(`${app.date.split('T')[0]}T${app.startTime}`);
-                    // End time? If not stored, assume duration or 1 hour
-                    // If services have duration, sum them.
+                    
                     const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 60;
                     end = new Date(start.getTime() + duration * 60000);
                 } else {
-                    // Maybe it is already a Date object (if schema changed to Date)
-                    start = new Date(app.startTime || app.date);
-                    end = app.endTime ? new Date(app.endTime) : new Date(start.getTime() + 60 * 60000);
+                    // Fallback: Use date only (all day or default time?)
+                    start = new Date(app.date);
+                    end = new Date(start.getTime() + 60 * 60000);
                 }
 
-                // If dates are invalid, fallback
-                if (isNaN(start.getTime())) start = new Date(app.date);
+                // Safety check
+                if (isNaN(start.getTime())) start = new Date();
                 if (isNaN(end.getTime())) end = new Date(start.getTime() + 60 * 60000);
 
                 return {
@@ -507,7 +515,12 @@ const Agenda = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Horário:</span>
-                                    <span className="font-medium">{selectedAppointment.startTime}</span>
+                                    <span className="font-medium">
+                                        {/* Format time correctly whether it is ISO string or HH:mm */}
+                                        {selectedAppointment.startTime.includes('T') 
+                                            ? format(new Date(selectedAppointment.startTime), 'HH:mm') 
+                                            : selectedAppointment.startTime}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-2">
                                     <span className="text-gray-500">Valor:</span>
