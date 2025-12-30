@@ -772,9 +772,7 @@ function App() {
                 <Calendar size={14} /> 
                 Meus Agendamentos
             </button>
-            <button onClick={handleAdminClick} className="text-gray-400 hover:text-gray-600 p-1 ml-1" title="Área Administrativa">
-                <Lock size={16} />
-            </button>
+            {/* Admin button removed as per request */}
           </div>
         </div>
 
