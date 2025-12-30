@@ -610,10 +610,12 @@ const Agenda = () => {
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Horário:</span>
                                     <span className="font-medium">
-                                        {/* Format time correctly whether it is ISO string or HH:mm */}
-                                        {selectedAppointment.startTime.includes('T') 
-                                            ? format(new Date(selectedAppointment.startTime), 'HH:mm') 
-                                            : selectedAppointment.startTime}
+                                        {/* Fix: Use hora_inicio if available to prevent timezone shifts */}
+                                        {selectedAppointment.hora_inicio 
+                                            ? selectedAppointment.hora_inicio 
+                                            : (selectedAppointment.startTime && selectedAppointment.startTime.includes('T') 
+                                                ? format(new Date(selectedAppointment.startTime), 'HH:mm') 
+                                                : selectedAppointment.startTime)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-2">
