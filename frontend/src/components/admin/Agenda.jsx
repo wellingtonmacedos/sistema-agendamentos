@@ -83,7 +83,7 @@ const Agenda = () => {
 
     const playNotificationSound = () => {
         try {
-            const audio = new Audio('/ringtone.mp3');
+            const audio = new Audio('/ringtone.wav');
             audio.play().catch(e => console.log("Audio play failed (interaction needed):", e));
         } catch (e) {
             console.error("Audio error:", e);
