@@ -161,6 +161,8 @@ const createAppointment = async ({ salao_id, profissional_id, cliente, telefone,
             duration: s.duration
         })),
         date: startDateTime,
+        hora_inicio: hora_inicio,
+        hora_fim: horaFim,
         startTime: startDateTime,
         endTime: endDateTime,
         totalPrice,

@@ -28,6 +28,14 @@ const appointmentSchema = new mongoose.Schema({
     type: Date, // Just the date part, or full date
     required: true,
   },
+  hora_inicio: {
+    type: String, // HH:mm format, to preserve original user input
+    required: false
+  },
+  hora_fim: {
+    type: String, // HH:mm format
+    required: false
+  },
   startTime: {
     type: Date, // Full ISO date with time
     required: true,

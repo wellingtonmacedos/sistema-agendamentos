@@ -86,6 +86,24 @@ const Agenda = () => {
                 let start = new Date(app.startTime);
                 let end = new Date(app.endTime);
 
+                // FIX: Use explicit string time if available to prevent timezone shifts
+                // This ensures the calendar shows exactly what was booked (e.g. "11:30")
+                if (app.hora_inicio && !isNaN(start.getTime())) {
+                    const [hours, minutes] = app.hora_inicio.split(':').map(Number);
+                    start.setHours(hours, minutes, 0, 0);
+                    
+                    // Update end time
+                    if (app.hora_fim) {
+                        const [endH, endM] = app.hora_fim.split(':').map(Number);
+                        end = new Date(start); // Use the corrected start date
+                        end.setHours(endH, endM, 0, 0);
+                    } else {
+                        // Recalculate based on original duration
+                        const originalDuration = (new Date(app.endTime) - new Date(app.startTime));
+                        end = new Date(start.getTime() + originalDuration);
+                    }
+                }
+
                 // Validate Start Time
                 if (isNaN(start.getTime())) {
                     // Fallback: Try to construct from date + simple string time if available (unlikely in this schema but safe)
