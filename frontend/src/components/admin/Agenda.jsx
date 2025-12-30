@@ -57,8 +57,20 @@ const Agenda = () => {
     // Calendar view date range
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    // Sound Notification
+    const [lastAppointmentCount, setLastAppointmentCount] = useState(0);
+
     useEffect(() => {
         fetchInitialData();
+        
+        // Polling for new appointments every 30 seconds
+        const interval = setInterval(() => {
+            const start = startOfMonth(currentDate);
+            const end = endOfMonth(currentDate);
+            fetchAppointments(start, end, true);
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -69,7 +81,16 @@ const Agenda = () => {
         fetchAppointments(start, end);
     }, [currentDate]);
 
-    const fetchAppointments = async (start, end) => {
+    const playNotificationSound = () => {
+        try {
+            const audio = new Audio('/ringtone.mp3');
+            audio.play().catch(e => console.log("Audio play failed (interaction needed):", e));
+        } catch (e) {
+            console.error("Audio error:", e);
+        }
+    };
+
+    const fetchAppointments = async (start, end, isPolling = false) => {
         try {
             // Fetch generous range to cover month view padding
             // Or just fetch all if volume is low, but better use range
@@ -79,7 +100,14 @@ const Agenda = () => {
                     end: addMonths(end, 1).toISOString()
                 }
             });
+            
+            // Check for new appointments
+            if (isPolling && res.data.length > lastAppointmentCount && lastAppointmentCount > 0) {
+                playNotificationSound();
+            }
+            
             setAppointments(res.data);
+            setLastAppointmentCount(res.data.length);
             
             // Map to Calendar Events
             const mappedEvents = res.data.map(app => {
