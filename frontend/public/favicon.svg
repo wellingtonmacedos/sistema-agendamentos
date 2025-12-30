@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background: Green Rounded Square -->
+  <rect x="32" y="80" width="448" height="384" rx="48" ry="48" fill="#166534" />
+  
+  <!-- Top Bar/Header -->
+  <rect x="32" y="80" width="448" height="96" rx="48" ry="48" fill="#15803d" />
+  <rect x="32" y="128" width="448" height="48" fill="#15803d" />
+  
+  <!-- Calendar Rings -->
+  <rect x="112" y="48" width="48" height="80" rx="24" ry="24" fill="#facc15" />
+  <rect x="352" y="48" width="48" height="80" rx="24" ry="24" fill="#facc15" />
+  
+  <!-- Checkmark -->
+  <path d="M368 240l-144 144-80-80" fill="none" stroke="#ffffff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
