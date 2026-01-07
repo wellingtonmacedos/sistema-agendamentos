@@ -44,7 +44,8 @@ function App() {
   // Selection
   const [booking, setBooking] = useState({
     salon: null,
-    service: null,
+    service: null, // Deprecated in favor of selectedServices, but kept for legacy checks if any
+    selectedServices: [], // New multi-selection support
     professional: null,
     date: null,
     time: null,
@@ -270,27 +271,48 @@ function App() {
   };
 
   const handleServiceSelect = async (service) => {
-    addMessage(service.name, 'user');
-    setBooking(prev => ({ ...prev, service }));
+    // Legacy single select handler - kept if needed but UI now uses Toggle/Confirm
+    handleServiceToggle(service);
+    // For single click flow (optional, but requested UI is toggle + confirm)
+  };
+
+  const handleServiceToggle = (service) => {
+    setBooking(prev => {
+        const current = prev.selectedServices || [];
+        const exists = current.find(s => s._id === service._id);
+        
+        let newSelection;
+        if (exists) {
+            newSelection = current.filter(s => s._id !== service._id);
+        } else {
+            newSelection = [...current, service];
+        }
+        
+        return { ...prev, selectedServices: newSelection };
+    });
+  };
+
+  const handleServicesConfirmed = async () => {
+    const selected = booking.selectedServices || [];
+    if (selected.length === 0) return;
     
+    const names = selected.map(s => s.name).join(', ');
+    addMessage(names, 'user');
+
+    // Legacy support: set 'service' to the first one just in case
+    setBooking(prev => ({ ...prev, service: selected[0] }));
+
     setLoading(true);
     try {
-        const res = await axios.get(`/api/professionals?salao_id=${booking.salon._id}&service_id=${service._id}`);
+        // Fetch all professionals for the salon
+        const res = await axios.get(`/api/professionals?salao_id=${booking.salon._id}`);
         setProfessionals(res.data);
         
         if (res.data.length > 0) {
             addMessage(`Você tem preferência por algum profissional?`);
             goToStep('PROFESSIONAL');
         } else {
-            const allRes = await axios.get(`/api/professionals?salao_id=${booking.salon._id}`);
-            if (allRes.data.length > 0) {
-                console.warn("No professionals matched service, falling back to all.");
-                setProfessionals(allRes.data);
-                addMessage(`Você tem preferência por algum profissional?`);
-                goToStep('PROFESSIONAL');
-            } else {
-                addMessage('Não há profissionais disponíveis para este serviço no momento.');
-            }
+            addMessage('Não há profissionais disponíveis no momento.');
         }
     } catch (err) {
         addMessage('Erro ao carregar profissionais.');
@@ -323,13 +345,17 @@ function App() {
     setLoading(true);
     
     try {
-      const { salon, professional, service } = booking;
+      const { salon, professional, service, selectedServices } = booking;
       
+      const serviceIds = selectedServices?.length > 0 
+        ? selectedServices.map(s => s._id) 
+        : [service?._id].filter(Boolean);
+
       const res = await axios.get('/api/disponibilidade/horarios', {
         params: {
           salao_id: salon._id,
           profissional_id: booking.professional?._id || professional._id,
-          servicos: booking.service?._id || service._id,
+          servicos: serviceIds,
           data: dateStr
         }
       });
@@ -373,12 +399,16 @@ function App() {
     addMessage('Confirmar', 'user');
     setLoading(true);
     try {
+      const serviceIds = booking.selectedServices?.length > 0 
+        ? booking.selectedServices.map(s => s._id)
+        : [booking.service._id];
+
       const res = await axios.post('/api/agendamentos', {
         salao_id: booking.salon._id,
         profissional_id: booking.professional._id,
         data: booking.date,
         hora_inicio: booking.time,
-        servicos: [booking.service._id],
+        servicos: serviceIds,
         cliente: booking.clientName,
         telefone: booking.clientPhone
       });
@@ -390,7 +420,11 @@ function App() {
         setCalendarLinks(res.data.links);
       }
 
-      addMessage(`Agendamento Confirmado! 🎉\n${booking.service.name} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
+      const serviceNames = booking.selectedServices?.length > 0
+        ? booking.selectedServices.map(s => s.name).join(', ')
+        : booking.service.name;
+
+      addMessage(`Agendamento Confirmado! 🎉\n${serviceNames} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
       goToStep('SUCCESS');
     } catch (err) {
       addMessage('Ocorreu um erro ao finalizar. Tente novamente.');
@@ -431,41 +465,80 @@ function App() {
           </div>
         );
       case 'SERVICE':
+        const selectedCount = booking.selectedServices?.length || 0;
         return (
-          <div className="grid gap-2">
-            {services.map(s => (
-              <button 
-                key={s._id} 
-                onClick={() => handleServiceSelect(s)} 
-                className="card hover:opacity-90 text-left flex justify-between items-center transition-all border border-transparent hover:border-current"
-                style={{ 
-                    backgroundColor: chatConfig.buttonColor, 
-                    color: '#fff' 
-                }}
-              >
-                <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-full text-white"><Scissors size={20} /></div>
-                    <div>
-                        <div className="font-medium">{s.name}</div>
-                        <div className="text-xs opacity-80">{s.duration} min</div>
+          <div className="space-y-4">
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+              {services.map(s => {
+                const isSelected = booking.selectedServices?.some(sel => sel._id === s._id);
+                return (
+                  <button 
+                    key={s._id} 
+                    onClick={() => handleServiceToggle(s)} 
+                    className={clsx(
+                      "flex-shrink-0 w-48 flex flex-col rounded-xl border transition-all snap-center overflow-hidden shadow-sm bg-white",
+                      isSelected ? "ring-2 ring-offset-2" : "opacity-90 hover:opacity-100"
+                    )}
+                    style={{ 
+                        borderColor: isSelected ? chatConfig.buttonColor : '#e2e8f0',
+                        '--tw-ring-color': chatConfig.buttonColor
+                    }}
+                  >
+                    {/* Image Area */}
+                    <div className="h-32 w-full bg-slate-100 relative">
+                        {s.image ? (
+                            <img src={s.image} alt={s.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <Scissors size={32} />
+                            </div>
+                        )}
+                        {isSelected && (
+                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-sm">
+                                <CheckCircle size={16} />
+                            </div>
+                        )}
                     </div>
+                    
+                    {/* Content Area */}
+                    <div className="p-3 text-left flex-1 flex flex-col w-full">
+                        <div className="font-medium text-slate-800 line-clamp-2 mb-1">{s.name}</div>
+                        <div className="mt-auto">
+                            <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                                <Clock size={12} /> {s.duration} min
+                            </div>
+                            <div className="font-bold text-slate-900">
+                                R$ {s.price.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Confirmation Button */}
+            {selectedCount > 0 && (
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleServicesConfirmed}
+                        className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all hover:opacity-90"
+                        style={{ backgroundColor: chatConfig.buttonColor }}
+                    >
+                        Confirmar ({selectedCount}) <Send size={16} />
+                    </button>
                 </div>
-                <div className="font-bold">R$ {s.price.toFixed(2)}</div>
-              </button>
-            ))}
+            )}
+            
+            {/* Helper Text */}
+            <div className="text-center text-xs text-slate-400 animate-pulse">
+                Arraste para o lado para ver mais opções →
+            </div>
           </div>
         );
       case 'PROFESSIONAL':
         return (
           <div className="grid gap-2">
-            <button 
-                onClick={() => handleProfessionalSelect(null)} 
-                className="card hover:opacity-90 text-left flex items-center gap-3 transition-all"
-                style={{ borderColor: chatConfig.buttonColor, borderWidth: '1px' }}
-            >
-                <div className="bg-slate-100 p-2 rounded-full"><Users size={20} /></div>
-                <div className="font-medium">Sem preferência</div>
-            </button>
             {professionals.map(p => (
               <button 
                 key={p._id} 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User, Search, Plus, Edit, X, Phone } from 'lucide-react';
+import { User, Search, Plus, Edit, X, Phone, Trash2 } from 'lucide-react';
 
 const Customers = () => {
     const [customers, setCustomers] = useState([]);
@@ -69,6 +69,18 @@ const Customers = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+            try {
+                await axios.delete(`/api/admin/customers/${id}`);
+                alert('Cliente excluído com sucesso!');
+                fetchCustomers();
+            } catch (err) {
+                alert('Erro ao excluir: ' + (err.response?.data?.error || err.message));
+            }
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -115,9 +127,17 @@ const Customers = () => {
                                     <td className="p-4 text-right">
                                         <button 
                                             onClick={() => handleEdit(c)}
-                                            className="text-gray-400 hover:text-blue-600 p-1"
+                                            className="text-gray-400 hover:text-blue-600 p-1 mr-2"
+                                            title="Editar"
                                         >
                                             <Edit size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(c._id)}
+                                            className="text-gray-400 hover:text-red-600 p-1"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 size={18} />
                                         </button>
                                     </td>
                                 </tr>

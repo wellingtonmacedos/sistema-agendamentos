@@ -18,6 +18,10 @@ const serviceSchema = new mongoose.Schema({
     ref: 'Salon',
     required: true,
   },
+  image: {
+    type: String,
+    required: false,
+  },
 });
 
 module.exports = mongoose.model('Service', serviceSchema);

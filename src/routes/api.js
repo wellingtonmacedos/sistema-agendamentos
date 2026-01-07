@@ -7,6 +7,7 @@ const authController = require('../controllers/authController');
 const customerController = require('../controllers/customerController');
 const { authMiddleware, checkRole } = require('../middlewares/authMiddleware');
 const userManagementController = require('../controllers/userManagementController');
+const upload = require('../config/upload');
 
 // Auth Routes
 router.post('/auth/register', authController.register);
@@ -28,6 +29,7 @@ router.get('/agendamentos/:id/ics', appointmentController.downloadICS);
 router.get('/admin/customers', authMiddleware, customerController.getCustomers);
 router.post('/admin/customers', authMiddleware, customerController.createCustomer);
 router.put('/admin/customers/:id', authMiddleware, customerController.updateCustomer);
+router.delete('/admin/customers/:id', authMiddleware, customerController.deleteCustomer);
 
 router.put('/salon', authMiddleware, adminController.updateSalon);
 router.get('/admin/reports', authMiddleware, reportController.getBillingReports);
@@ -98,6 +100,17 @@ router.delete('/admin/appointments/:id', authMiddleware, adminController.deleteA
 // Super Admin Routes
 router.get('/super-admin/users', authMiddleware, checkRole(['SUPER_ADMIN']), userManagementController.listAdmins);
 router.post('/super-admin/users', authMiddleware, checkRole(['SUPER_ADMIN']), userManagementController.createAdmin);
+
+// Upload Route
+router.post('/upload', authMiddleware, upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+    }
+    // Return relative path accessible via /public/uploads
+    const fileUrl = `/public/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
+});
+
 router.put('/super-admin/users/:id', authMiddleware, checkRole(['SUPER_ADMIN']), userManagementController.updateAdmin);
 router.delete('/super-admin/users/:id', authMiddleware, checkRole(['SUPER_ADMIN']), userManagementController.deleteAdmin);
 router.post('/super-admin/users/:id/reset-password', authMiddleware, checkRole(['SUPER_ADMIN']), userManagementController.resetPassword);

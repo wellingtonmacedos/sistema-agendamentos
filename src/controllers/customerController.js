@@ -104,8 +104,25 @@ const updateCustomer = async (req, res) => {
     }
 };
 
+const deleteCustomer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const customer = await Customer.findOneAndDelete({ _id: id, salonId: req.user.id });
+        
+        if (!customer) {
+            return res.status(404).json({ error: 'Cliente não encontrado' });
+        }
+
+        res.json({ message: 'Cliente excluído com sucesso' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao excluir cliente' });
+    }
+};
+
 module.exports = {
     getCustomers,
     createCustomer,
-    updateCustomer
+    updateCustomer,
+    deleteCustomer
 };
