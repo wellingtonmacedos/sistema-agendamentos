@@ -1,18 +1,47 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
+      includeAssets: ['favicon.svg', 'ringtone.mp3'],
+      manifest: {
+        name: 'Sistema de Agendamentos',
+        short_name: 'Agendamentos',
+        description: 'Gerenciamento de agendamentos e salão',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml'
+          }
+        ]
+      }
+    })
+  ],
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3005',
         changeOrigin: true,
         secure: false,
       },
       '/public': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3005',
         changeOrigin: true,
         secure: false,
       }

@@ -7,6 +7,7 @@ const authController = require('../controllers/authController');
 const customerController = require('../controllers/customerController');
 const { authMiddleware, checkRole } = require('../middlewares/authMiddleware');
 const userManagementController = require('../controllers/userManagementController');
+const pushController = require('../controllers/pushController');
 const upload = require('../config/upload');
 
 // Auth Routes
@@ -48,6 +49,14 @@ router.delete('/services/:id', authMiddleware, adminController.deleteService);
 router.post('/blocks', authMiddleware, adminController.createBlock);
 router.get('/blocks', authMiddleware, adminController.getBlocks);
 router.delete('/blocks/:id', authMiddleware, adminController.deleteBlock);
+
+// Push Routes
+router.get('/push/vapid-public-key', pushController.getVapidPublicKey);
+router.post('/push/subscribe', authMiddleware, pushController.subscribe);
+
+// Public Push Routes (for Client PWA/Frontend)
+router.get('/public/push/vapid-public-key', pushController.getVapidPublicKey);
+router.post('/public/push/subscribe', pushController.publicSubscribe);
 
 // Helper route to get salon info (protected)
 router.get('/me', authMiddleware, async (req, res) => {

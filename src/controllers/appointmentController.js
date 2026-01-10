@@ -1,6 +1,6 @@
 const availabilityService = require('../services/availabilityService');
 const appointmentService = require('../services/appointmentService');
-const { sendAppointmentConfirmation } = require('../services/notificationService');
+const { sendAppointmentConfirmation, sendPushToAdmins, sendPushToClient } = require('../services/notificationService');
 
 const { generateGoogleCalendarUrl, generateICSContent } = require('../utils/calendarUtils');
 
@@ -67,6 +67,7 @@ const createAppointment = async (req, res) => {
         // Notification for first one
         if (result.length > 0) {
              sendAppointmentConfirmation(result[0]).catch(console.error);
+             sendPushToAdmins(result[0]).catch(console.error);
         }
 
     } else {
@@ -82,6 +83,7 @@ const createAppointment = async (req, res) => {
             origin
         });
         sendAppointmentConfirmation(result).catch(console.error);
+        sendPushToAdmins(result).catch(console.error);
     }
 
     // Prepare Calendar Links (only for single or first of recurrence)
@@ -295,6 +297,24 @@ const updateAppointment = async (req, res) => {
 
         if (!appointment) {
             return res.status(404).json({ error: 'Agendamento não encontrado' });
+        }
+
+        // Notify if date/time changed or explicitly requested
+        // Detect if date or time changed
+        // NOTE: 'updates' might not contain the old value, so this trigger is always firing on update.
+        // For a more refined check we would need the old document.
+        // But for now, let's assume if date/startTime is in updates, it's a reschedule.
+        if (updates.date || updates.startTime) {
+             sendPushToAdmins(appointment, 'RESCHEDULE').catch(console.error);
+             sendPushToClient(appointment, 'RESCHEDULE').catch(console.error);
+        }
+
+        // Detect Status Change (e.g. Cancelled)
+        if (updates.status && updates.status === 'cancelled') {
+             sendPushToAdmins(appointment, 'CANCEL').catch(console.error);
+             sendPushToClient(appointment, 'CANCEL').catch(console.error);
+        } else if (updates.status && updates.status === 'confirmed') {
+             sendPushToClient(appointment, 'CONFIRM').catch(console.error);
         }
 
         res.json(appointment);

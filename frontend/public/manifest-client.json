@@ -1,0 +1,16 @@
+{
+  "name": "Agendamento Cliente",
+  "short_name": "Agendar",
+  "description": "Faça seu agendamento de forma rápida e fácil",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

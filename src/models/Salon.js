@@ -57,6 +57,8 @@ const salonSchema = new mongoose.Schema({
     assistantTone: { type: String, enum: ['formal', 'neutro', 'informal'], default: 'neutro' },
     avatarUrl: { type: String, default: '' },
     showAvatar: { type: Boolean, default: true },
+    enableSuccessMeme: { type: Boolean, default: true },
+    successMemeUrl: { type: String, default: 'https://media.tenor.com/8ZDLU43omvcAAAAM/kid-thumbs-up.gif' }
   },
   cancellationPolicy: String,
   role: {

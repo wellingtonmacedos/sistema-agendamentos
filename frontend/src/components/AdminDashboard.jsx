@@ -87,7 +87,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <p className="text-xs text-gray-500 mt-1">{user?.name}</p>
                 </div>
                 
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
@@ -127,8 +127,8 @@ const AdminDashboard = ({ user, onLogout }) => {
 
                 {/* Mobile Menu Overlay */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden fixed inset-0 z-10 bg-white pt-16 px-4">
-                        <nav className="space-y-2">
+                    <div className="md:hidden fixed inset-0 z-10 bg-white pt-16 px-4 overflow-y-auto">
+                        <nav className="space-y-2 pb-6">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}

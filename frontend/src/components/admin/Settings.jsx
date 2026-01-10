@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Clock, Calendar, AlertTriangle, Save, Trash2, Plus, Copy } from 'lucide-react';
+import { Clock, Calendar, AlertTriangle, Save, Trash2, Plus, Copy, Bell, Smartphone } from 'lucide-react';
 import { format } from 'date-fns';
+import { subscribeToPush, getPushPermissionState } from '../../utils/pushUtils';
 
 const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -9,6 +10,7 @@ const Settings = () => {
     const [salon, setSalon] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('general');
+    const [pushPermission, setPushPermission] = useState('default');
     
     // Form States
     const [formData, setFormData] = useState({});
@@ -22,7 +24,29 @@ const Settings = () => {
     useEffect(() => {
         fetchSettings();
         fetchBlocks();
+        checkPushPermission();
     }, []);
+
+    const checkPushPermission = async () => {
+        const status = await getPushPermissionState();
+        setPushPermission(status);
+    };
+
+    const handleEnablePush = async () => {
+        try {
+            if (pushPermission === 'denied') {
+                alert('Você bloqueou as notificações. Por favor, habilite-as nas configurações do seu navegador.');
+                return;
+            }
+            const result = await subscribeToPush();
+            if (result) {
+                setPushPermission('granted');
+                alert('Notificações ativadas com sucesso!');
+            }
+        } catch (error) {
+            alert('Erro ao ativar notificações. Verifique se o app está instalado ou rodando em HTTPS/localhost.');
+        }
+    };
 
     const fetchSettings = async () => {
         try {
@@ -161,6 +185,7 @@ const Settings = () => {
                     { id: 'hours', label: 'Horários de Funcionamento', icon: Clock },
                     { id: 'agenda', label: 'Regras da Agenda', icon: Calendar },
                     { id: 'blocks', label: 'Bloqueios & Feriados', icon: AlertTriangle },
+                    { id: 'notifications', label: 'Notificações', icon: Bell },
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -178,6 +203,59 @@ const Settings = () => {
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                
+                {/* NOTIFICATIONS TAB */}
+                {activeTab === 'notifications' && (
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                            <Bell className="w-5 h-5" /> Notificações Push
+                        </h3>
+                        
+                        <div className="bg-blue-50 p-4 rounded-md mb-6">
+                            <p className="text-sm text-blue-700">
+                                Ative as notificações para receber alertas instantâneos sobre novos agendamentos, 
+                                mesmo com o aplicativo fechado (requer instalação do App ou navegador compatível).
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                                <h4 className="font-medium text-gray-900">Novos Agendamentos</h4>
+                                <p className="text-sm text-gray-500">Receba um alerta quando um cliente agendar um horário.</p>
+                            </div>
+                            
+                            {pushPermission === 'granted' ? (
+                                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                    Ativado
+                                </span>
+                            ) : (
+                                <button 
+                                    onClick={handleEnablePush}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Ativar Notificações
+                                </button>
+                            )}
+                        </div>
+                        
+                        {pushPermission === 'denied' && (
+                             <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded">
+                                 As notificações estão bloqueadas no seu navegador. Clique no ícone de cadeado/configurações na barra de endereço para desbloquear.
+                             </div>
+                        )}
+                        
+                        <div className="mt-8 pt-6 border-t">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Smartphone className="w-5 h-5" /> Instalação do App
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Este sistema pode ser instalado como um aplicativo no seu computador ou celular.
+                                Procure pela opção <strong>"Instalar App"</strong> ou <strong>"Adicionar à Tela Inicial"</strong> no menu do seu navegador.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* GENERAL TAB */}
                 {activeTab === 'general' && (
                     <div className="space-y-6">

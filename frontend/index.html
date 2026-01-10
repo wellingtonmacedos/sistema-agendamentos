@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Agendamento Chat</title>
+    <script>
+      (function() {
+        // Dynamic Manifest Selection (Admin vs Client PWA)
+        const isClient = window.location.pathname.startsWith('/chat') || window.location.pathname.startsWith('/public');
+        const manifestPath = isClient ? '/manifest-client.json' : '/manifest.webmanifest';
+        
+        // Try to find existing link (in case injected) or create new
+        // We observe DOM to catch if Vite injects it later
+        const updateManifest = () => {
+          let link = document.querySelector('link[rel="manifest"]');
+          if (link) {
+            if (link.href !== window.location.origin + manifestPath) {
+                link.href = manifestPath;
+            }
+          } else {
+            link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestPath;
+            document.head.appendChild(link);
+          }
+        };
+
+        updateManifest();
+        // Observer in case it's injected later
+        new MutationObserver(updateManifest).observe(document.head, { childList: true });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

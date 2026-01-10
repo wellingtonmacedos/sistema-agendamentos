@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { format, addDays, startOfToday, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Send, User, Users, Calendar, Clock, Scissors, CheckCircle, Store, Briefcase, Lock, Trash2, ArrowLeft, History } from 'lucide-react';
+import { Send, User, Users, Calendar, Clock, Scissors, CheckCircle, Store, Briefcase, Lock, Trash2, ArrowLeft, History, Bell, Plus, X } from 'lucide-react';
 import clsx from 'clsx';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
+import { subscribeToPush, getPushPermissionState } from './utils/pushUtils';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -40,6 +41,51 @@ function App() {
   // Admin State
   const [adminUser, setAdminUser] = useState(null);
   const [view, setView] = useState('CHAT'); // CHAT, LOGIN, ADMIN
+  
+  const [notifPermission, setNotifPermission] = useState('default');
+
+  useEffect(() => {
+    getPushPermissionState().then(setNotifPermission);
+  }, []);
+
+  const handleEnableNotifications = async () => {
+    try {
+        setLoading(true); // Visual feedback
+        const salonId = booking.salon?._id || salons[0]?._id;
+        const phone = booking.clientPhone;
+        
+        console.log('[Push] Requesting permission for:', { salonId, phone });
+
+        if (!salonId || !phone) {
+            alert('Erro: Dados incompletos para notificação. Tente recarregar.');
+            return;
+        }
+
+        // Request permission and subscribe
+        const success = await subscribeToPush('CLIENT', { 
+            clientPhone: phone, 
+            salonId: salonId 
+        });
+        
+        console.log('[Push] Subscribe result:', success);
+
+        if (success) {
+            setNotifPermission('granted');
+            alert('Notificações ativadas com sucesso! Você será avisado sobre este agendamento.'); 
+        } else {
+            alert('Não foi possível ativar as notificações. Verifique as permissões do navegador.');
+        }
+    } catch (err) {
+        console.error("Failed to enable notifications", err);
+        if (err.message.includes('not supported')) {
+            alert('Seu navegador não suporta notificações ou você está em modo anônimo.');
+        } else {
+            alert(`Erro ao ativar notificações: ${err.message}. Tente recarregar a página.`);
+        }
+    } finally {
+        setLoading(false);
+    }
+  };
 
   // Selection
   const [booking, setBooking] = useState({
@@ -64,7 +110,9 @@ function App() {
     headerTextColor: '#000000',
     assistantName: 'Agendamento Online',
     avatarUrl: '',
-    showAvatar: true
+    showAvatar: true,
+    enableSuccessMeme: true,
+    successMemeUrl: 'https://media.tenor.com/8ZDLU43omvcAAAAM/kid-thumbs-up.gif'
    });
 
    useEffect(() => {
@@ -454,7 +502,14 @@ function App() {
         : booking.service.name;
 
       addMessage(`Agendamento Confirmado! 🎉\n${serviceNames} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
-      goToStep('SUCCESS');
+      
+      if (chatConfig.enableSuccessMeme !== false) {
+        const memeUrl = chatConfig.successMemeUrl || 'https://media.tenor.com/l5_u4JktKxYAAAAC/thumbs-up-computer.gif';
+        addMessage(memeUrl, 'bot', 'image');
+      }
+
+      addMessage('Deseja adicionar à sua agenda? Escolha uma opção abaixo:', 'bot');
+      setStep('CALENDAR_DECISION');
     } catch (err) {
       addMessage('Ocorreu um erro ao finalizar. Tente novamente.');
     } finally {
@@ -497,7 +552,7 @@ function App() {
         const selectedCount = booking.selectedServices?.length || 0;
         return (
           <div className="space-y-4">
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+            <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 scrollbar-hide snap-x">
               {services.map(s => {
                 const isSelected = booking.selectedServices?.some(sel => sel._id === s._id);
                 return (
@@ -505,7 +560,7 @@ function App() {
                     key={s._id} 
                     onClick={() => handleServiceToggle(s)} 
                     className={clsx(
-                      "flex-shrink-0 w-48 flex flex-col rounded-xl border transition-all snap-center overflow-hidden shadow-sm bg-white",
+                      "flex-shrink-0 w-40 flex flex-col rounded-xl border transition-all snap-center overflow-hidden shadow-sm bg-white",
                       isSelected ? "ring-2 ring-offset-2" : "opacity-90 hover:opacity-100"
                     )}
                     style={{ 
@@ -514,29 +569,29 @@ function App() {
                     }}
                   >
                     {/* Image Area */}
-                    <div className="h-32 w-full bg-slate-100 relative">
+                    <div className="h-24 w-full bg-slate-100 relative">
                         {s.image && s.image.trim() !== '' ? (
                             <img src={s.image} alt={s.name} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                <Scissors size={32} />
+                                <Scissors size={24} />
                             </div>
                         )}
                         {isSelected && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-sm">
-                                <CheckCircle size={16} />
+                            <div className="absolute top-1 right-1 bg-green-500 text-white p-0.5 rounded-full shadow-sm">
+                                <CheckCircle size={14} />
                             </div>
                         )}
                     </div>
                     
                     {/* Content Area */}
-                    <div className="p-3 text-left flex-1 flex flex-col w-full">
-                        <div className="font-medium text-slate-800 line-clamp-2 mb-1">{s.name}</div>
+                    <div className="p-2 text-left flex-1 flex flex-col w-full">
+                        <div className="font-medium text-xs text-slate-800 line-clamp-2 mb-1 leading-tight">{s.name}</div>
                         <div className="mt-auto">
-                            <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
-                                <Clock size={12} /> {s.duration} min
+                            <div className="text-[10px] text-slate-500 mb-0.5 flex items-center gap-1">
+                                <Clock size={10} /> {s.duration} min
                             </div>
-                            <div className="font-bold text-slate-900">
+                            <div className="font-bold text-sm text-slate-900">
                                 R$ {s.price.toFixed(2)}
                             </div>
                         </div>
@@ -567,19 +622,19 @@ function App() {
         );
       case 'PROFESSIONAL':
         return (
-          <div className="grid gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {professionals.map(p => (
               <button 
                 key={p._id} 
                 onClick={() => handleProfessionalSelect(p)} 
-                className="card hover:opacity-90 text-left flex items-center gap-3 transition-all"
+                className="card hover:opacity-90 text-left flex items-center gap-2 transition-all p-2"
                 style={{ 
                     backgroundColor: chatConfig.buttonColor, 
                     color: '#fff' 
                 }}
               >
-                <div className="bg-white/20 p-2 rounded-full text-white"><Briefcase size={20} /></div>
-                <div className="font-medium">{p.name}</div>
+                <div className="bg-white/20 p-1.5 rounded-full text-white"><Briefcase size={16} /></div>
+                <div className="font-medium text-sm line-clamp-1">{p.name}</div>
               </button>
             ))}
           </div>
@@ -661,19 +716,9 @@ function App() {
               onClick={() => {
                 addMessage('Não, encerrar atendimento', 'user');
                 addMessage('Entendido. Agradecemos o contato!', 'bot');
-                // Reset flow after a delay or just leave it
+                // Reset flow after a delay
                 setTimeout(() => {
-                    setStep('INIT');
-                    setMessages([]);
-                    setBooking({
-                        salon: null,
-                        service: null,
-                        professional: null,
-                        date: null,
-                        time: null,
-                        clientName: '',
-                        clientPhone: ''
-                    });
+                    handleReset();
                 }, 3000);
               }} 
               className="card hover:opacity-90 text-left flex items-center gap-3 transition-all bg-white border border-slate-200"
@@ -705,52 +750,97 @@ function App() {
                 </button>
             </div>
         );
-      case 'SUCCESS':
+      case 'CALENDAR_DECISION':
+        return (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                addMessage('Sim', 'user');
+                addMessage('Escolha sua agenda:', 'bot');
+                setStep('CALENDAR_OPTIONS');
+              }}
+              className="card p-3 flex flex-col items-center gap-2 hover:opacity-90 transition-all"
+              style={{ backgroundColor: chatConfig.buttonColor, color: '#fff' }}
+            >
+              <div className="bg-white/20 p-2 rounded-full"><CheckCircle size={24} /></div>
+              <div className="font-bold">SIM</div>
+            </button>
+            <button
+              onClick={() => {
+                addMessage('Não', 'user');
+                addMessage('Combinado! Te esperamos lá. 😉', 'bot');
+                setStep('FINAL');
+              }}
+              className="card p-3 flex flex-col items-center gap-2 hover:bg-slate-100 transition-all bg-white border border-slate-200"
+              style={{ color: '#64748b' }}
+            >
+              <div className="bg-slate-100 p-2 rounded-full"><X size={24} /></div>
+              <div className="font-bold">NÃO</div>
+            </button>
+          </div>
+        );
+      case 'CALENDAR_OPTIONS':
         return (
             <div className="space-y-3">
                 {calendarLinks && (
-                    <div className="card bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-3">
-                        <p className="font-medium text-slate-700 mb-3 text-center">Deseja adicionar à sua agenda?</p>
-                        <div className="grid grid-cols-1 gap-2">
-                            <a 
-                                href={calendarLinks.google} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium transition-colors"
-                            >
-                                <Calendar size={16} className="text-blue-500" /> Google Agenda
-                            </a>
-                            <a 
-                                href={calendarLinks.ics} 
-                                download="agendamento.ics"
-                                className="flex items-center justify-center gap-2 p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium transition-colors"
-                            >
-                                <Calendar size={16} className="text-slate-500" /> Apple Calendar / Outros (.ics)
-                            </a>
-                        </div>
+                    <div className="flex gap-2">
+                         <a 
+                             href={calendarLinks.google} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm"
+                             style={{ borderColor: chatConfig.buttonColor, color: chatConfig.buttonColor }}
+                         >
+                             <Calendar size={18} /> Google
+                         </a>
+                         <a 
+                             href={calendarLinks.ics} 
+                             download="agendamento.ics"
+                             className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm"
+                             style={{ borderColor: chatConfig.buttonColor, color: chatConfig.buttonColor }}
+                         >
+                             <Calendar size={18} /> Apple/Outros
+                         </a>
                     </div>
+                )}
+                
+                <button 
+                    onClick={handleReset}
+                    className="w-full btn-primary flex justify-center items-center gap-2"
+                    style={{ backgroundColor: chatConfig.buttonColor }}
+                >
+                    <Plus size={18} /> Novo Agendamento
+                </button>
+            </div>
+        );
+      case 'FINAL':
+        return (
+            <div className="space-y-3">
+                {notifPermission === 'default' && (
+                    <button 
+                        onClick={handleEnableNotifications}
+                        className="w-full p-3 rounded-xl shadow-sm flex items-center justify-between hover:opacity-90 transition-opacity"
+                        style={{ backgroundColor: chatConfig.buttonColor, color: '#fff' }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <Bell size={18} />
+                            <div className="text-left">
+                                <div className="font-bold text-sm">Ativar Notificações</div>
+                                <div className="text-[10px] opacity-90">Receba lembretes automáticos</div>
+                            </div>
+                        </div>
+                        <div className="bg-white/20 p-1 rounded-lg">
+                            <CheckCircle size={14} />
+                        </div>
+                    </button>
                 )}
 
                 <button 
-                    onClick={() => {
-                        setStep('INIT');
-                        setMessages([]);
-                        setBooking({
-                            salon: null,
-                            service: null,
-                            professional: null,
-                            date: null,
-                            time: null,
-                            clientName: booking.clientName, // Keep name/phone
-                            clientPhone: booking.clientPhone
-                        });
-                        setCalendarLinks(null); // Reset links
-                        handleMyHistoryClick(); // Go to my appointments or just reset
-                    }}
-                    className="w-full btn-primary"
+                    onClick={handleReset}
+                    className="w-full btn-primary flex justify-center items-center gap-2"
                     style={{ backgroundColor: chatConfig.buttonColor }}
                 >
-                    Novo Agendamento
+                    <Plus size={18} /> Novo Agendamento
                 </button>
             </div>
         );
@@ -844,6 +934,104 @@ function App() {
     }
   };
 
+  const runStartLogic = async () => {
+      setLoading(true);
+      try {
+        let loadedSalons = salons;
+        
+        // If salons not loaded yet (e.g. first run), load them
+        if (loadedSalons.length === 0) {
+            const path = window.location.pathname;
+            const chatMatch = path.match(/^\/chat\/([^\/]+)/);
+            
+            if (chatMatch) {
+                const slug = chatMatch[1];
+                try {
+                    const res = await axios.get(`/api/public/salon/${slug}`);
+                    if (res.data) loadedSalons = [res.data];
+                } catch (e) {
+                    console.error("Slug load failed", e);
+                }
+            }
+
+            if (loadedSalons.length === 0) {
+                const res = await axios.get('/api/salons');
+                loadedSalons = res.data;
+            }
+
+            setSalons(loadedSalons);
+            
+            if (loadedSalons.length === 1 && loadedSalons[0].chatConfig) {
+                setChatConfig(prev => ({ ...prev, ...loadedSalons[0].chatConfig }));
+            }
+        }
+
+        // CACHE CHECK
+        const cachedPhone = localStorage.getItem('customer_phone');
+        let customerFound = false;
+
+        if (cachedPhone) {
+            try {
+                const res = await axios.get(`/api/customers/check?phone=${cachedPhone}`);
+                if (res.data.found) {
+                    customerFound = true;
+                    setBooking(prev => ({ ...prev, clientPhone: cachedPhone, clientName: res.data.name }));
+                    addMessage(`Olá novamente, **${res.data.name}**! 👋 (Reconhecido pelo seu dispositivo)`);
+                    
+                    // Skip to Salon selection
+                    if (loadedSalons.length > 0) {
+                        if (loadedSalons.length === 1) {
+                            handleSalonSelect(loadedSalons[0], true);
+                        } else {
+                            setStep('SALON');
+                            addMessage('Selecione o estabelecimento:');
+                        }
+                    } else {
+                        addMessage('Nenhum estabelecimento encontrado.');
+                    }
+                }
+            } catch (e) {
+                console.error("Cache check failed", e);
+            }
+        }
+
+        if (!customerFound) {
+            addMessage('Olá! Sou seu assistente de agendamentos. 🤖\n\nAntes de começarmos, por favor, me informe seu **número de celular** (com DDD).');
+            setStep('IDENTIFY_PHONE');
+        }
+
+      } catch (err) {
+        console.error("Erro ao carregar inicial", err);
+        addMessage('Erro ao conectar com o servidor.');
+      } finally {
+        setLoading(false);
+      }
+  };
+
+  const handleReset = () => {
+      setMessages([]);
+      setHistory([]);
+      setBooking({
+        salon: null,
+        service: null,
+        selectedServices: [],
+        professional: null,
+        date: null,
+        time: null,
+        clientName: '',
+        clientPhone: ''
+      });
+      setStep('INIT');
+      setCalendarLinks(null);
+      
+      // Small delay to ensure state is cleared before logic runs (though React batches, it's safer to await or just run)
+      // Actually, since state updates are async, we might want to run logic in a useEffect or just assume it will pick up.
+      // But we need to make sure we don't use stale state in runStartLogic.
+      // runStartLogic uses `salons` state.
+      
+      setTimeout(runStartLogic, 100);
+  };
+
   // Init
   useEffect(() => {
     if (initialized.current) return;
@@ -901,72 +1089,8 @@ function App() {
           }
       }
       
-      // Load Salons & Check Cache
-      try {
-        let loadedSalons = [];
-        const chatMatch = path.match(/^\/chat\/([^\/]+)/);
-        
-        if (chatMatch) {
-            const slug = chatMatch[1];
-            try {
-                const res = await axios.get(`/api/public/salon/${slug}`);
-                if (res.data) loadedSalons = [res.data];
-            } catch (e) {
-                console.error("Slug load failed", e);
-            }
-        }
-
-        if (loadedSalons.length === 0) {
-            const res = await axios.get('/api/salons');
-            loadedSalons = res.data;
-        }
-
-        setSalons(loadedSalons);
-        
-        if (loadedSalons.length === 1 && loadedSalons[0].chatConfig) {
-            setChatConfig(prev => ({ ...prev, ...loadedSalons[0].chatConfig }));
-        }
-
-        // CACHE CHECK
-        const cachedPhone = localStorage.getItem('customer_phone');
-        let customerFound = false;
-
-        if (cachedPhone) {
-            try {
-                const res = await axios.get(`/api/customers/check?phone=${cachedPhone}`);
-                if (res.data.found) {
-                    customerFound = true;
-                    setBooking(prev => ({ ...prev, clientPhone: cachedPhone, clientName: res.data.name }));
-                    addMessage(`Olá novamente, **${res.data.name}**! 👋 (Reconhecido pelo seu dispositivo)`);
-                    
-                    // Skip to Salon selection
-                    if (loadedSalons.length > 0) {
-                        if (loadedSalons.length === 1) {
-                            handleSalonSelect(loadedSalons[0], true);
-                        } else {
-                            setStep('SALON');
-                            addMessage('Selecione o estabelecimento:');
-                        }
-                    } else {
-                        addMessage('Nenhum estabelecimento encontrado.');
-                    }
-                }
-            } catch (e) {
-                console.error("Cache check failed", e);
-            }
-        }
-
-        if (!customerFound) {
-            addMessage('Olá! Sou seu assistente de agendamentos. 🤖\n\nAntes de começarmos, por favor, me informe seu **número de celular** (com DDD).');
-            setStep('IDENTIFY_PHONE');
-        }
-
-      } catch (err) {
-        console.error("Erro ao carregar inicial", err);
-        addMessage('Erro ao conectar com o servidor.');
-      } finally {
-        setLoading(false);
-      }
+      // Run Chat Logic
+      await runStartLogic();
     };
     init();
   }, []);
@@ -1008,6 +1132,14 @@ function App() {
             </p>
           </div>
           <div className="flex gap-2">
+            <button 
+                onClick={handleReset} 
+                className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
+                title="Voltar ao Início"
+            >
+                <History size={14} /> 
+                Início
+            </button>
             <button 
                 onClick={handleMyHistoryClick} 
                 className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
@@ -1052,7 +1184,16 @@ function App() {
                     color: msg.sender === 'user' ? chatConfig.userTextColor : chatConfig.botTextColor
                 }}
               >
-                {msg.text}
+                {msg.type === 'image' ? (
+                    <img 
+                        src={msg.text} 
+                        alt="Meme" 
+                        className="rounded-lg w-full h-auto object-cover max-w-[200px]" 
+                        onError={(e) => e.target.style.display = 'none'}
+                    />
+                ) : (
+                    msg.text
+                )}
               </div>
             </div>
           ))}

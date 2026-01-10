@@ -23,6 +23,9 @@ app.use('/public', express.static(path.join(__dirname, '../public'))); // Keep o
 connectDB().then(() => {
     // Seed admin user (useful for in-memory or fresh setups)
     require('./utils/seeder')();
+    
+    // Start Cron Service for Reminders
+    require('./services/cronService').start();
 });
 
 // Routes

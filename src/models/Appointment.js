@@ -89,6 +89,10 @@ const appointmentSchema = new mongoose.Schema({
     enum: ['weekly', 'biweekly', 'monthly', 'yearly'],
     required: false
   },
+  reminders: {
+    admin24h: { type: Boolean, default: false },
+    client2h: { type: Boolean, default: false }
+  },
   createdAt: {
     type: Date,
     default: Date.now,
