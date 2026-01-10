@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Salon = require('../models/Salon');
+const User = require('../models/User');
 const Service = require('../models/Service');
 const Professional = require('../models/Professional');
 
@@ -53,6 +54,39 @@ const seedAdmin = async () => {
             console.log(`Password: ${password}`);
         } else {
             console.log('Admin user already exists.');
+        }
+
+        const existingAdminUser = await User.findOne({ email });
+        if (!existingAdminUser) {
+            await User.create({
+                name: `Admin ${salon.name}`,
+                email,
+                password: salon.password,
+                role: 'ADMIN',
+                salonId: salon._id,
+                active: true
+            });
+            console.log('--- Admin Auth User Created ---');
+        } else {
+            let changed = false;
+            if (existingAdminUser.role !== 'ADMIN') {
+                existingAdminUser.role = 'ADMIN';
+                changed = true;
+            }
+            if (!existingAdminUser.salonId) {
+                existingAdminUser.salonId = salon._id;
+                changed = true;
+            }
+            if (existingAdminUser.password !== salon.password) {
+                existingAdminUser.password = salon.password;
+                changed = true;
+            }
+            if (existingAdminUser.active !== true) {
+                existingAdminUser.active = true;
+                changed = true;
+            }
+            if (changed) await existingAdminUser.save();
+            console.log('Admin Auth User already exists.');
         }
 
         // Check and Seed Services
@@ -114,6 +148,39 @@ const seedAdmin = async () => {
                  console.log('Updated existing Super Admin role.');
              }
              console.log('Super Admin already exists.');
+        }
+
+        const existingSuperUser = await User.findOne({ email: SUPER_ADMIN_EMAIL });
+        if (!existingSuperUser) {
+            await User.create({
+                name: 'Super Admin',
+                email: SUPER_ADMIN_EMAIL,
+                password: superAdmin.password,
+                role: 'SUPER_ADMIN',
+                salonId: superAdmin._id,
+                active: true
+            });
+            console.log('--- Super Admin Auth User Created ---');
+        } else {
+            let changed = false;
+            if (existingSuperUser.role !== 'SUPER_ADMIN') {
+                existingSuperUser.role = 'SUPER_ADMIN';
+                changed = true;
+            }
+            if (!existingSuperUser.salonId) {
+                existingSuperUser.salonId = superAdmin._id;
+                changed = true;
+            }
+            if (existingSuperUser.password !== superAdmin.password) {
+                existingSuperUser.password = superAdmin.password;
+                changed = true;
+            }
+            if (existingSuperUser.active !== true) {
+                existingSuperUser.active = true;
+                changed = true;
+            }
+            if (changed) await existingSuperUser.save();
+            console.log('Super Admin Auth User already exists.');
         }
 
     } catch (err) {

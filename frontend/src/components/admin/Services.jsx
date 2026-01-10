@@ -24,8 +24,10 @@ const Services = () => {
     const fetchServices = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
-            if (user && user.id) {
-                const res = await axios.get(`/api/services?salao_id=${user.id}`);
+            if (user) {
+                // Use salonId if available (User model), otherwise fallback to id (Legacy Salon model)
+                const salonId = user.salonId || user.id;
+                const res = await axios.get(`/api/services?salao_id=${salonId}`);
                 setServices(res.data);
             }
         } catch (error) {

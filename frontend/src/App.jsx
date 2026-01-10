@@ -68,17 +68,37 @@ function App() {
    });
 
    useEffect(() => {
-    const fetchChatConfig = async () => {
+    const initApp = async () => {
         try {
-            const res = await axios.get('/api/public/config');
-            if (res.data && Object.keys(res.data).length > 0) {
-                setChatConfig(prev => ({ ...prev, ...res.data }));
+            // Check for slug in URL (e.g., /chat/:slug)
+            const pathParts = window.location.pathname.split('/');
+            const slugIndex = pathParts.indexOf('chat');
+            const slug = slugIndex !== -1 && pathParts.length > slugIndex + 1 ? pathParts[slugIndex + 1] : null;
+
+            if (slug) {
+                // Fetch specific salon context
+                const res = await axios.get(`/api/public/salon/${slug}`);
+                const salon = res.data;
+                
+                if (salon) {
+                    setSalons([salon]); // Pre-load as the only salon to force selection
+                    
+                    if (salon.chatConfig) {
+                        setChatConfig(prev => ({ ...prev, ...salon.chatConfig }));
+                    }
+                }
+            } else {
+                // Default global config
+                const res = await axios.get('/api/public/config');
+                if (res.data && Object.keys(res.data).length > 0) {
+                    setChatConfig(prev => ({ ...prev, ...res.data }));
+                }
             }
         } catch (error) {
-            console.error("Erro ao carregar config do chat:", error);
+            console.error("Erro ao inicializar app:", error);
         }
     };
-    fetchChatConfig();
+    initApp();
   }, []);
  
    useEffect(() => {
@@ -142,6 +162,15 @@ function App() {
         setMyAppointments(res.data);
         if (res.data.length === 0) {
             addMessage('Você não possui agendamentos ativos no momento.');
+            addMessage('Que tal realizar um novo agendamento? Confira as opções abaixo:');
+            // If we are not on the service list, try to go there
+            if (step !== 'SERVICE' && salons.length > 0) {
+                if (services.length > 0) {
+                    goToStep('SERVICE');
+                } else {
+                    handleSalonSelect(booking.salon || salons[0], true);
+                }
+            }
         } else {
             addMessage(`Encontrei ${res.data.length} agendamento(s) ativo(s).`);
             goToStep('MY_APPOINTMENTS');
@@ -486,7 +515,7 @@ function App() {
                   >
                     {/* Image Area */}
                     <div className="h-32 w-full bg-slate-100 relative">
-                        {s.image ? (
+                        {s.image && s.image.trim() !== '' ? (
                             <img src={s.image} alt={s.name} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300">
@@ -786,6 +815,23 @@ function App() {
                     </div>
                 ))}
                 <button 
+                    onClick={() => {
+                        if (services.length > 0) {
+                            goToStep('SERVICE');
+                        } else if (salons.length > 0) {
+                            handleSalonSelect(booking.salon || salons[0], true);
+                        } else {
+                            addMessage('Aguarde, carregando informações do estabelecimento...');
+                            window.location.reload();
+                        }
+                    }}
+                    className="w-full py-3 text-white rounded-lg font-medium hover:opacity-90 flex items-center justify-center gap-2 mb-2"
+                    style={{ backgroundColor: chatConfig.buttonColor }}
+                >
+                    <Plus size={16} /> Novo Agendamento
+                </button>
+
+                <button 
                     onClick={handleBack}
                     className="w-full py-3 text-slate-500 text-sm hover:underline"
                 >
@@ -857,11 +903,28 @@ function App() {
       
       // Load Salons & Check Cache
       try {
-        const salonsRes = await axios.get('/api/salons');
-        setSalons(salonsRes.data);
+        let loadedSalons = [];
+        const chatMatch = path.match(/^\/chat\/([^\/]+)/);
         
-        if (salonsRes.data.length === 1 && salonsRes.data[0].chatConfig) {
-            setChatConfig(prev => ({ ...prev, ...salonsRes.data[0].chatConfig }));
+        if (chatMatch) {
+            const slug = chatMatch[1];
+            try {
+                const res = await axios.get(`/api/public/salon/${slug}`);
+                if (res.data) loadedSalons = [res.data];
+            } catch (e) {
+                console.error("Slug load failed", e);
+            }
+        }
+
+        if (loadedSalons.length === 0) {
+            const res = await axios.get('/api/salons');
+            loadedSalons = res.data;
+        }
+
+        setSalons(loadedSalons);
+        
+        if (loadedSalons.length === 1 && loadedSalons[0].chatConfig) {
+            setChatConfig(prev => ({ ...prev, ...loadedSalons[0].chatConfig }));
         }
 
         // CACHE CHECK
@@ -877,9 +940,9 @@ function App() {
                     addMessage(`Olá novamente, **${res.data.name}**! 👋 (Reconhecido pelo seu dispositivo)`);
                     
                     // Skip to Salon selection
-                    if (salonsRes.data.length > 0) {
-                        if (salonsRes.data.length === 1) {
-                            handleSalonSelect(salonsRes.data[0], true);
+                    if (loadedSalons.length > 0) {
+                        if (loadedSalons.length === 1) {
+                            handleSalonSelect(loadedSalons[0], true);
                         } else {
                             setStep('SALON');
                             addMessage('Selecione o estabelecimento:');

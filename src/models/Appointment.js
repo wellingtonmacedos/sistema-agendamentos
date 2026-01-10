@@ -50,6 +50,15 @@ const appointmentSchema = new mongoose.Schema({
     price: Number,
     duration: Number
   }],
+  products: [{
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product'
+    },
+    name: String,
+    price: Number,
+    quantity: Number
+  }],
   totalPrice: Number,
   finalPrice: Number, // Price effectively paid/charged
   paymentMethod: {
@@ -69,6 +78,15 @@ const appointmentSchema = new mongoose.Schema({
   },
   realEndTime: {
     type: Date,
+    required: false
+  },
+  recurrenceId: {
+    type: String, // UUID to link recurrent appointments
+    required: false
+  },
+  recurrenceType: {
+    type: String,
+    enum: ['weekly', 'biweekly', 'monthly', 'yearly'],
     required: false
   },
   createdAt: {

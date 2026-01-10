@@ -4,6 +4,7 @@ const Service = require('../models/Service');
 const Schedule = require('../models/Schedule');
 const Block = require('../models/Block');
 const Appointment = require('../models/Appointment');
+const Product = require('../models/Product');
 const mongoose = require('mongoose');
 
 // --- Salon Settings ---
@@ -17,7 +18,7 @@ exports.updateSalon = async (req, res) => {
 
     // Ensure chatConfig is properly merged if present
     if (updates.chatConfig) {
-        const salon = await Salon.findById(req.user.id);
+        const salon = await Salon.findById(req.user.salonId);
         if (salon) {
              // Merge existing chatConfig with new updates to avoid overwriting nested fields if partial update
              // Mongoose Map/Object handling can be tricky with partial updates depending on how it's sent
@@ -27,7 +28,7 @@ exports.updateSalon = async (req, res) => {
         }
     }
 
-    const salon = await Salon.findByIdAndUpdate(req.user.id, updates, { new: true });
+    const salon = await Salon.findByIdAndUpdate(req.user.salonId, updates, { new: true });
     res.json(salon);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -38,7 +39,7 @@ exports.updateSalon = async (req, res) => {
 
 exports.createProfessional = async (req, res) => {
   try {
-    const professional = new Professional({ ...req.body, salonId: req.user.id });
+    const professional = new Professional({ ...req.body, salonId: req.user.salonId });
     await professional.save();
     res.status(201).json(professional);
   } catch (error) {
@@ -50,7 +51,7 @@ exports.updateProfessional = async (req, res) => {
   try {
     const { id } = req.params;
     const professional = await Professional.findOneAndUpdate(
-      { _id: id, salonId: req.user.id },
+      { _id: id, salonId: req.user.salonId },
       req.body,
       { new: true }
     );
@@ -64,7 +65,7 @@ exports.updateProfessional = async (req, res) => {
 exports.deleteProfessional = async (req, res) => {
   try {
     const { id } = req.params;
-    const professional = await Professional.findOneAndDelete({ _id: id, salonId: req.user.id });
+    const professional = await Professional.findOneAndDelete({ _id: id, salonId: req.user.salonId });
     if (!professional) return res.status(404).json({ error: 'Profissional não encontrado' });
     res.json({ message: 'Profissional removido' });
   } catch (error) {
@@ -76,7 +77,7 @@ exports.deleteProfessional = async (req, res) => {
 
 exports.createService = async (req, res) => {
   try {
-    const service = new Service({ ...req.body, salonId: req.user.id });
+    const service = new Service({ ...req.body, salonId: req.user.salonId });
     await service.save();
     res.status(201).json(service);
   } catch (error) {
@@ -88,7 +89,7 @@ exports.updateService = async (req, res) => {
   try {
     const { id } = req.params;
     const service = await Service.findOneAndUpdate(
-      { _id: id, salonId: req.user.id },
+      { _id: id, salonId: req.user.salonId },
       req.body,
       { new: true }
     );
@@ -102,7 +103,7 @@ exports.updateService = async (req, res) => {
 exports.deleteService = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await Service.findOneAndDelete({ _id: id, salonId: req.user.id });
+    const service = await Service.findOneAndDelete({ _id: id, salonId: req.user.salonId });
     if (!service) return res.status(404).json({ error: 'Serviço não encontrado' });
     res.json({ message: 'Serviço removido' });
   } catch (error) {
@@ -119,7 +120,7 @@ exports.createBlock = async (req, res) => {
         const profId = (professionalId && professionalId !== 'null' && professionalId !== '') ? professionalId : undefined;
 
         const block = new Block({
-            salonId: req.user.id,
+            salonId: req.user.salonId,
             professionalId: profId,
             startTime,
             endTime,
@@ -135,7 +136,7 @@ exports.createBlock = async (req, res) => {
 
 exports.getBlocks = async (req, res) => {
     try {
-        const blocks = await Block.find({ salonId: req.user.id }).populate('professionalId', 'name');
+        const blocks = await Block.find({ salonId: req.user.salonId }).populate('professionalId', 'name');
         res.json(blocks);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -145,7 +146,7 @@ exports.getBlocks = async (req, res) => {
 exports.deleteBlock = async (req, res) => {
     try {
         const { id } = req.params;
-        const block = await Block.findOneAndDelete({ _id: id, salonId: req.user.id });
+        const block = await Block.findOneAndDelete({ _id: id, salonId: req.user.salonId });
         if (!block) return res.status(404).json({ error: 'Bloqueio não encontrado' });
         res.json({ message: 'Bloqueio removido' });
     } catch (error) {
@@ -164,11 +165,11 @@ exports.getReports = async (req, res) => {
         // Ensure endDate includes the whole day
         endDate.setHours(23, 59, 59, 999);
 
-        console.log(`[Reports] Generating for Salon: ${req.user.id}`);
+        console.log(`[Reports] Generating for Salon: ${req.user.salonId}`);
         console.log(`[Reports] Date Range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
         const dateFilter = {
-            salonId: new mongoose.Types.ObjectId(req.user.id),
+            salonId: new mongoose.Types.ObjectId(req.user.salonId),
             status: 'completed', // Only completed/finished appointments
             realEndTime: { $gte: startDate, $lte: endDate } // Filter by real end time
         };
@@ -199,15 +200,19 @@ exports.getReports = async (req, res) => {
             {
                 $group: {
                     _id: "$services.name",
-                    revenue: { $sum: "$services.price" }, // This is per-service price.
-                    // Note: If finalPrice differs from totalPrice, distributing the difference to services is complex.
-                    // For now, we stick to service list price revenue or pro-rated? 
-                    // To keep it simple, reports by service track the *value of services performed*, 
-                    // while totalRevenue tracks actual money in.
+                    revenue: { $sum: "$services.price" }, 
                     count: { $sum: 1 }
                 }
             },
-            { $sort: { revenue: -1 } }
+            { $sort: { revenue: -1 } },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    value: "$revenue",
+                    count: 1
+                }
+            }
         ]);
 
         // 3. Revenue by Professional
@@ -229,13 +234,53 @@ exports.getReports = async (req, res) => {
                     count: { $sum: 1 }
                 }
             },
-            { $sort: { revenue: -1 } }
+            { $sort: { revenue: -1 } },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    value: "$revenue",
+                    count: 1
+                }
+            }
         ]);
 
+        // 4. Revenue by Product
+        const productStats = await Appointment.aggregate([
+            { $match: dateFilter },
+            { $unwind: "$products" },
+            {
+                $group: {
+                    _id: "$products.name",
+                    revenue: { $sum: { $multiply: ["$products.price", "$products.quantity"] } },
+                    count: { $sum: "$products.quantity" }
+                }
+            },
+            { $sort: { revenue: -1 } },
+            {
+                $project: {
+                    _id: 0,
+                    name: "$_id",
+                    value: "$revenue",
+                    count: 1
+                }
+            }
+        ]);
+
+        // Calculate Average Ticket
+        const totalRev = totalStats[0]?.totalRevenue || 0;
+        const totalAppts = totalStats[0]?.totalAppointments || 0;
+        const averageTicket = totalAppts > 0 ? totalRev / totalAppts : 0;
+
         res.json({
-            total: totalStats[0] || { totalRevenue: 0, totalAppointments: 0 },
+            summary: {
+                totalRevenue: totalRev,
+                totalAppointments: totalAppts,
+                averageTicket: averageTicket
+            },
             byService: serviceStats,
-            byProfessional: professionalStats
+            byProfessional: professionalStats,
+            byProduct: productStats
         });
 
     } catch (error) {
@@ -247,9 +292,11 @@ exports.getReports = async (req, res) => {
 exports.finishAppointment = async (req, res) => {
     try {
         const { id } = req.params;
-        const { finalPrice, paymentMethod } = req.body;
+        const { finalPrice, paymentMethod, products } = req.body;
         
-        console.log(`[Admin] Finishing appointment ${id}. Final Price Input: ${finalPrice}, Payment Method: ${paymentMethod}`);
+        console.log(`[Admin] Finishing appointment ${id}`);
+        console.log(`[Admin] Payload - FinalPrice: ${finalPrice}, Method: ${paymentMethod}`);
+        console.log(`[Admin] Payload - Products:`, JSON.stringify(products));
 
         if (!paymentMethod) {
             return res.status(400).json({ error: 'Forma de pagamento é obrigatória para finalizar o atendimento.' });
@@ -260,7 +307,7 @@ exports.finishAppointment = async (req, res) => {
             return res.status(400).json({ error: 'Forma de pagamento inválida.' });
         }
 
-        const appointment = await Appointment.findOne({ _id: id, salonId: req.user.id });
+        const appointment = await Appointment.findOne({ _id: id, salonId: req.user.salonId });
         
         if (!appointment) {
             return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -268,6 +315,46 @@ exports.finishAppointment = async (req, res) => {
         
         if (appointment.status === 'completed') {
              return res.status(400).json({ error: 'Agendamento já foi finalizado e não pode ser alterado.' });
+        }
+
+        // --- Stock Validation & Deduction ---
+        const usedProducts = [];
+        if (products && Array.isArray(products) && products.length > 0) {
+            for (const item of products) {
+                const product = await Product.findOne({ _id: item.productId, salonId: req.user.salonId });
+                
+                if (!product) {
+                    return res.status(400).json({ error: `Produto não encontrado: ${item.name}` });
+                }
+                
+                if (!product.active) {
+                    return res.status(400).json({ error: `Produto inativo: ${product.name}` });
+                }
+
+                if (product.stock < item.quantity) {
+                    return res.status(400).json({ error: `Estoque insuficiente para o produto: ${product.name}. Disponível: ${product.stock}` });
+                }
+
+                usedProducts.push({
+                    productDoc: product,
+                    quantity: item.quantity,
+                    price: item.price
+                });
+            }
+
+            // Deduct stock
+            for (const item of usedProducts) {
+                item.productDoc.stock -= item.quantity;
+                await item.productDoc.save();
+                
+                // Add to appointment products list
+                appointment.products.push({
+                    productId: item.productDoc._id,
+                    name: item.productDoc.name,
+                    price: item.price,
+                    quantity: item.quantity
+                });
+            }
         }
 
         appointment.status = 'completed';
@@ -293,17 +380,28 @@ exports.finishAppointment = async (req, res) => {
 exports.deleteAppointment = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(`[Admin] Deleting appointment ${id} for user ${req.user.id}`);
+        const { cancelFuture } = req.query;
+        console.log(`[Admin] Deleting appointment ${id} for salon ${req.user.salonId}, cancelFuture: ${cancelFuture}`);
 
-        const appointment = await Appointment.findOne({ _id: id, salonId: req.user.id });
+        const appointment = await Appointment.findOne({ _id: id, salonId: req.user.salonId });
         
         if (!appointment) {
-            console.log(`[Admin] Appointment ${id} not found or not owned by salon ${req.user.id}`);
+            console.log(`[Admin] Appointment ${id} not found or not owned by salon ${req.user.salonId}`);
             return res.status(404).json({ error: 'Agendamento não encontrado' });
         }
 
-        await Appointment.findByIdAndDelete(id);
-        console.log(`[Admin] Appointment ${id} deleted successfully`);
+        if (cancelFuture === 'true' && appointment.recurrenceId) {
+            await Appointment.deleteMany({
+                recurrenceId: appointment.recurrenceId,
+                startTime: { $gte: appointment.startTime },
+                salonId: req.user.salonId
+            });
+            console.log(`[Admin] Deleted recurring series from ${appointment.startTime}`);
+        } else {
+            await Appointment.findByIdAndDelete(id);
+            console.log(`[Admin] Appointment ${id} deleted successfully`);
+        }
+
         res.json({ message: 'Agendamento excluído com sucesso' });
     } catch (error) {
         console.error(`[Admin] Error deleting appointment:`, error);

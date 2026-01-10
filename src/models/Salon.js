@@ -7,16 +7,23 @@ const salonSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
-    unique: true,
+    required: false, // Changed from true
+    sparse: true,    // Allow nulls to be unique (if multiple nulls)
   },
   password: {
     type: String,
-    required: true,
+    required: false, // Changed from true
   },
   phone: String,
   address: String,
   logo: String, // URL
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true
+  },
   workingHours: {
     type: Map,
     of: new mongoose.Schema({
@@ -70,5 +77,48 @@ const salonSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Pre-save middleware to generate slug
+salonSchema.pre('save', async function(next) {
+  if (!this.slug && this.name) {
+    let baseSlug = this.name
+      .toString()
+      .toLowerCase()
+      .normalize('NFD') // Separate accents
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/\s+/g, '-') // Spaces to hyphens
+      .replace(/[^\w\-]+/g, '') // Remove non-word chars
+      .replace(/\-\-+/g, '-') // Collapse dashes
+      .replace(/^-+/, '') // Trim starting dash
+      .replace(/-+$/, ''); // Trim ending dash
+
+    if (!baseSlug) baseSlug = 'salao';
+
+    // Check for uniqueness
+    let slug = baseSlug;
+    let counter = 1;
+    const Salon = mongoose.model('Salon');
+    
+    while (await Salon.findOne({ slug, _id: { $ne: this._id } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    
+    this.slug = slug;
+  }
+  next();
+});
+
+// Virtual for chatbot link
+salonSchema.virtual('chatbotLink').get(function() {
+  if (!this.slug) return null;
+  // Assuming frontend is served on same domain or we can use env var
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000'; // Adjust as needed
+  return `${baseUrl}/chat/${this.slug}`;
+});
+
+// Ensure virtuals are included in JSON
+salonSchema.set('toJSON', { virtuals: true });
+salonSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Salon', salonSchema);

@@ -3,7 +3,7 @@ const Customer = require('../models/Customer');
 const getCustomers = async (req, res) => {
     try {
         const { search, page = 1, limit = 10 } = req.query;
-        const query = { salonId: req.user.id }; // Scoped to current salon
+        const query = { salonId: req.user.salonId }; // Scoped to current salon
 
         if (search) {
             const cleanSearch = search.replace(/\D/g, '');
@@ -47,7 +47,7 @@ const createCustomer = async (req, res) => {
 
         // Check for duplicate phone in this salon
         const existing = await Customer.findOne({ 
-            salonId: req.user.id, 
+            salonId: req.user.salonId, 
             phone: cleanPhone
         });
 
@@ -56,7 +56,7 @@ const createCustomer = async (req, res) => {
         }
 
         const customer = new Customer({
-            salonId: req.user.id,
+            salonId: req.user.salonId,
             name,
             phone: cleanPhone
         });
@@ -74,7 +74,7 @@ const updateCustomer = async (req, res) => {
         const { id } = req.params;
         const { name, phone } = req.body;
 
-        const customer = await Customer.findOne({ _id: id, salonId: req.user.id });
+        const customer = await Customer.findOne({ _id: id, salonId: req.user.salonId });
         if (!customer) {
             return res.status(404).json({ error: 'Cliente não encontrado' });
         }
@@ -84,7 +84,7 @@ const updateCustomer = async (req, res) => {
             const cleanPhone = phone.replace(/\D/g, '');
             if (cleanPhone !== customer.phone) {
                 const existing = await Customer.findOne({ 
-                    salonId: req.user.id, 
+                    salonId: req.user.salonId, 
                     phone: cleanPhone
                 });
                 if (existing) {
@@ -107,7 +107,7 @@ const updateCustomer = async (req, res) => {
 const deleteCustomer = async (req, res) => {
     try {
         const { id } = req.params;
-        const customer = await Customer.findOneAndDelete({ _id: id, salonId: req.user.id });
+        const customer = await Customer.findOneAndDelete({ _id: id, salonId: req.user.salonId });
         
         if (!customer) {
             return res.status(404).json({ error: 'Cliente não encontrado' });

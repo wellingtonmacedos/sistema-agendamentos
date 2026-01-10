@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Clock, Calendar, AlertTriangle, Save, Trash2, Plus } from 'lucide-react';
+import { Clock, Calendar, AlertTriangle, Save, Trash2, Plus, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -143,6 +143,11 @@ const Settings = () => {
         updateDay(dayIndex, 'breaks', currentBreaks);
     };
 
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('Link copiado para a área de transferência!');
+    };
+
     if (loading) return <div>Carregando...</div>;
 
     return (
@@ -210,6 +215,28 @@ const Settings = () => {
                                 rows={4}
                                 className="mt-1 block w-full rounded-md border-gray-300 border p-2" 
                             />
+                        </div>
+
+                        {/* Chatbot Link Section */}
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h3 className="text-sm font-medium text-blue-800 mb-2">Link do Chatbot (Público)</h3>
+                            <p className="text-xs text-blue-600 mb-3">
+                                Este é o link único do seu estabelecimento. Compartilhe com seus clientes para que eles possam realizar agendamentos.
+                            </p>
+                            <div className="flex gap-2">
+                                <input 
+                                    readOnly
+                                    value={salon?.chatbotLink || ''}
+                                    className="flex-1 rounded-md border-blue-200 bg-white p-2 text-sm text-gray-600"
+                                />
+                                <button 
+                                    onClick={() => copyToClipboard(salon?.chatbotLink)}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2 transition-colors"
+                                >
+                                    <Copy size={16} />
+                                    <span className="text-sm font-medium">Copiar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

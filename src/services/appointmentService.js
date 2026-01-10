@@ -4,7 +4,8 @@ const Block = require('../models/Block');
 const Customer = require('../models/Customer');
 const Salon = require('../models/Salon');
 const Professional = require('../models/Professional');
-const { format, addMinutes } = require('date-fns');
+const { format, addMinutes, addWeeks, addMonths, addYears, parseISO, isBefore, isEqual } = require('date-fns');
+const mongoose = require('mongoose');
 
 // Internal Helpers
 const somarMinutos = (horaInicio, duracaoMinutos) => {
@@ -89,7 +90,7 @@ const calcularDuracaoServicos = async (servicosIds) => {
  * Orchestrates the creation of an appointment
  * Validates availability, calculates price, handles customer lookup/creation, and saves to DB.
  */
-const createAppointment = async ({ salao_id, profissional_id, cliente, telefone, data, hora_inicio, servicos, origin = 'client' }) => {
+const createAppointment = async ({ salao_id, profissional_id, cliente, telefone, data, hora_inicio, servicos, origin = 'client', extraFields = {} }) => {
     // 1. Calculate Duration and End Time
     const duracaoTotal = await calcularDuracaoServicos(servicos);
     const horaFim = somarMinutos(hora_inicio, duracaoTotal);
@@ -168,7 +169,8 @@ const createAppointment = async ({ salao_id, profissional_id, cliente, telefone,
         totalPrice,
         customerName: cliente,
         customerPhone: telefone,
-        origin
+        origin,
+        ...extraFields
     });
 
     await newAppointment.save();
@@ -179,7 +181,77 @@ const getServices = async (salonId) => {
     return await Service.find({ salonId });
 };
 
+const createRecurrentAppointments = async ({ 
+    salao_id, profissional_id, cliente, telefone, data, hora_inicio, servicos, origin = 'client', 
+    recurrence 
+}) => {
+    // 1. Generate Dates
+    const dates = [];
+    // Ensure data is YYYY-MM-DD
+    let currentDate = parseISO(data); 
+    const endDate = recurrence.endDate ? parseISO(recurrence.endDate) : null;
+    // Limit max occurrences to avoid infinite loops or massive spam
+    const maxCount = 52; 
+    const count = recurrence.count ? Math.min(parseInt(recurrence.count), maxCount) : maxCount;
+    
+    // Add first date
+    dates.push(format(currentDate, 'yyyy-MM-dd'));
+
+    // Start loop from 1 because 0 is already added
+    for (let i = 1; i < count; i++) {
+        let nextDate;
+        switch(recurrence.type) {
+            case 'weekly': nextDate = addWeeks(currentDate, 1); break;
+            case 'biweekly': nextDate = addWeeks(currentDate, 2); break;
+            case 'monthly': nextDate = addMonths(currentDate, 1); break;
+            case 'yearly': nextDate = addYears(currentDate, 1); break;
+            default: break;
+        }
+        
+        if (!nextDate) break;
+
+        // If endDate is specified, stop if we pass it (exclusive or inclusive? usually inclusive)
+        // isBefore(endDate, nextDate) means endDate < nextDate. So nextDate > endDate.
+        if (endDate && isBefore(endDate, nextDate)) {
+            break;
+        }
+        
+        currentDate = nextDate;
+        dates.push(format(currentDate, 'yyyy-MM-dd'));
+    }
+
+    // 2. Calculate Duration (needed for conflict check)
+    const duracaoTotal = await calcularDuracaoServicos(servicos);
+    const horaFim = somarMinutos(hora_inicio, duracaoTotal);
+
+    // 3. Validate Availability for ALL dates
+    for (const dateStr of dates) {
+        const conflict = await existeConflito(salao_id, profissional_id, dateStr, hora_inicio, horaFim);
+        if (conflict) {
+            throw new Error(`Horário indisponível na data ${format(parseISO(dateStr), 'dd/MM/yyyy')}`);
+        }
+    }
+
+    // 4. Create All
+    const recurrenceId = new mongoose.Types.ObjectId().toString();
+    const appointments = [];
+
+    for (const dateStr of dates) {
+        const appt = await createAppointment({
+            salao_id, profissional_id, cliente, telefone, data: dateStr, hora_inicio, servicos, origin,
+            extraFields: {
+                recurrenceId,
+                recurrenceType: recurrence.type
+            }
+        });
+        appointments.push(appt);
+    }
+
+    return appointments;
+};
+
 module.exports = {
     createAppointment,
+    createRecurrentAppointments,
     getServices
 };

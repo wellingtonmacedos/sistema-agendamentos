@@ -5,10 +5,10 @@ const { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, 
 const getBillingReports = async (req, res) => {
     try {
         const { period, date } = req.query; // period: 'day', 'week', 'month', 'year'. date: reference date (ISO)
-        const salonId = req.user.id;
+        const salonId = req.user.salonId;
 
         if (!salonId) {
-            return res.status(401).json({ error: 'Não autorizado' });
+            return res.status(401).json({ error: 'Não autorizado ou estabelecimento não identificado' });
         }
 
         let startDate, endDate;
@@ -53,6 +53,7 @@ const getBillingReports = async (req, res) => {
         let totalAppointments = appointments.length;
         const revenueByProfessional = {};
         const revenueByService = {};
+        const revenueByProduct = {};
 
         appointments.forEach(app => {
             const price = app.finalPrice || app.totalPrice || 0;
@@ -77,6 +78,18 @@ const getBillingReports = async (req, res) => {
                     revenueByService[svc.name].count += 1;
                 });
             }
+
+            // By Product
+            if (app.products && app.products.length > 0) {
+                app.products.forEach(prod => {
+                    const prodPrice = (prod.price || 0) * (prod.quantity || 1);
+                    if (!revenueByProduct[prod.name]) {
+                        revenueByProduct[prod.name] = { revenue: 0, count: 0 };
+                    }
+                    revenueByProduct[prod.name].revenue += prodPrice;
+                    revenueByProduct[prod.name].count += (prod.quantity || 1);
+                });
+            }
         });
 
         const averageTicket = totalAppointments > 0 ? (totalRevenue / totalAppointments) : 0;
@@ -91,7 +104,8 @@ const getBillingReports = async (req, res) => {
                 averageTicket
             },
             byProfessional: Object.entries(revenueByProfessional).map(([name, data]) => ({ name, value: data.revenue, count: data.count })),
-            byService: Object.entries(revenueByService).map(([name, data]) => ({ name, value: data.revenue, count: data.count }))
+            byService: Object.entries(revenueByService).map(([name, data]) => ({ name, value: data.revenue, count: data.count })),
+            byProduct: Object.entries(revenueByProduct).map(([name, data]) => ({ name, value: data.revenue, count: data.count }))
         });
 
     } catch (error) {

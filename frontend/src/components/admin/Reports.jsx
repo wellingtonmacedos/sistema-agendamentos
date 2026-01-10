@@ -7,7 +7,8 @@ import {
     Users, 
     Scissors, 
     DollarSign, 
-    Filter 
+    Filter,
+    Package
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -229,6 +230,35 @@ const Reports = () => {
                                     <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                                         <div 
                                             className="bg-purple-500 h-2 rounded-full" 
+                                            style={{ width: `${(item.value / data.summary.totalRevenue) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* By Product */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Package size={18} className="text-gray-500" /> Faturamento por Produto
+                    </h3>
+                    <div className="space-y-4">
+                        {data?.byProduct?.length === 0 ? (
+                            <p className="text-sm text-gray-400 text-center py-4">Sem dados para o período.</p>
+                        ) : (
+                            data?.byProduct
+                                ?.sort((a, b) => b.value - a.value)
+                                .map((item, index) => (
+                                <div key={index} className="space-y-1">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-medium text-gray-700">{item.name}</span>
+                                        <span className="font-bold text-gray-900">{formatCurrency(item.value)}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                        <div 
+                                            className="bg-green-500 h-2 rounded-full" 
                                             style={{ width: `${(item.value / data.summary.totalRevenue) * 100}%` }}
                                         ></div>
                                     </div>

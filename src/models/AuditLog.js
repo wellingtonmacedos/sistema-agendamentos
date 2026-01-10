@@ -8,12 +8,24 @@ const auditLogSchema = new mongoose.Schema({
   },
   performedBy: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Salon', 
+    refPath: 'performedByModel', 
     required: true 
+  },
+  performedByModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Salon'],
+    default: 'User'
   },
   targetId: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Salon' 
+    refPath: 'targetModel'
+  },
+  targetModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Salon'],
+    default: 'User'
   },
   targetName: String, // Snapshot do nome para facilitar leitura
   details: { type: Object }, // Dados alterados ou metadados

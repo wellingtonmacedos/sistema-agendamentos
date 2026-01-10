@@ -41,63 +41,86 @@ const getAvailability = async (req, res) => {
 
 const createAppointment = async (req, res) => {
   try {
-    const { salao_id, profissional_id, data, hora_inicio, servicos, cliente, telefone, origin } = req.body;
+    const { salao_id, profissional_id, data, hora_inicio, servicos, cliente, telefone, origin, recurrence } = req.body;
 
     // Basic validation of presence
     if (!salao_id || !profissional_id || !data || !hora_inicio || !servicos || !cliente || !telefone) {
         return res.status(400).json({ erro: 'Todos os campos são obrigatórios (incluindo telefone)' });
     }
 
-    // Delegate business logic to Service
-    const novoAgendamento = await appointmentService.createAppointment({
-        salao_id,
-        profissional_id,
-        cliente,
-        telefone,
-        data,
-        hora_inicio,
-        servicos,
-        origin
-    });
+    let result;
 
-    // Send Notification (Async, don't block response)
-    sendAppointmentConfirmation(novoAgendamento).catch(console.error);
+    if (recurrence && recurrence.type && recurrence.type !== 'none') {
+        // Recurrent creation
+         result = await appointmentService.createRecurrentAppointments({
+            salao_id,
+            profissional_id,
+            cliente,
+            telefone,
+            data,
+            hora_inicio,
+            servicos,
+            origin,
+            recurrence
+        });
+        
+        // Notification for first one
+        if (result.length > 0) {
+             sendAppointmentConfirmation(result[0]).catch(console.error);
+        }
 
-    // Prepare Calendar Links
+    } else {
+        // Single creation
+        result = await appointmentService.createAppointment({
+            salao_id,
+            profissional_id,
+            cliente,
+            telefone,
+            data,
+            hora_inicio,
+            servicos,
+            origin
+        });
+        sendAppointmentConfirmation(result).catch(console.error);
+    }
+
+    // Prepare Calendar Links (only for single or first of recurrence)
+    const primaryAppointment = Array.isArray(result) ? result[0] : result;
+
     try {
         const Salon = require('../models/Salon');
         const salon = await Salon.findById(salao_id);
-        const populatedAppointment = await require('../models/Appointment').findById(novoAgendamento._id)
+        const populatedAppointment = await require('../models/Appointment').findById(primaryAppointment._id)
             .populate('professionalId')
             .populate('services');
 
         if (salon && populatedAppointment) {
             const googleLink = generateGoogleCalendarUrl(populatedAppointment, salon);
-            // Download link for ICS. Assuming API is hosted at relative path or we return absolute if env var set
-            // For now, return a relative path that the frontend can prefix if needed, or just relative
-            const icsLink = `/api/agendamentos/${novoAgendamento._id}/ics`;
-
-            return res.json({ 
-                sucesso: true, 
-                links: {
-                    google: googleLink,
-                    ics: icsLink
-                }
-            });
+            const icsLink = `/api/agendamentos/${primaryAppointment._id}/ics`;
+            
+            // Return result with links
+            if (Array.isArray(result)) {
+                return res.json({ 
+                    appointments: result,
+                    links: { google: googleLink, ics: icsLink }
+                });
+            } else {
+                // Mongoose toObject to allow appending
+                const responseObj = result.toObject ? result.toObject() : result;
+                responseObj.links = { google: googleLink, ics: icsLink };
+                
+                return res.json(responseObj);
+            }
         }
-    } catch (calError) {
-        console.error('Error generating calendar links:', calError);
-        // Fallback to success without links if error occurs
+    } catch (err) {
+        console.error("Calendar generation error:", err);
     }
 
-    res.json({ sucesso: true });
+    res.json(result);
 
   } catch (error) {
     console.error(error);
-    if (error.message === 'Horário indisponível') {
-        return res.status(409).json({ erro: error.message });
-    }
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    res.status(500).json({ erro: error.message || 'Erro ao criar agendamento' });
   }
 };
 
@@ -224,7 +247,7 @@ const cancelAppointment = async (req, res) => {
 const getAllAppointments = async (req, res) => {
     try {
         // Filter by the logged-in admin's salon ID
-        const filter = req.user ? { salonId: req.user.id } : {};
+        const filter = req.user ? { salonId: req.user.salonId } : {};
         
         const { start, end } = req.query;
         if (start && end) {
@@ -283,22 +306,34 @@ const updateAppointment = async (req, res) => {
 
 const checkCustomer = async (req, res) => {
   try {
-    const { phone } = req.query;
+    const { phone, salao_id } = req.query;
     if (!phone) {
       return res.status(400).json({ error: 'Telefone é obrigatório' });
     }
 
     // Normalize phone (remove non-digits)
     const cleanPhone = phone.replace(/\D/g, '');
-    console.log(`Checking customer: Input="${phone}" Clean="${cleanPhone}"`);
+    console.log(`Checking customer: Input="${phone}" Clean="${cleanPhone}" Salon="${salao_id}"`);
 
-    // Try finding by clean phone OR original phone (for backward compatibility)
-    const customer = await require('../models/Customer').findOne({ 
+    const query = {
         $or: [
             { phone: cleanPhone },
             { phone: phone }
         ]
-    });
+    };
+
+    // If salon_id is provided, scope to it. 
+    // If NOT provided, we might have a problem in multi-tenant mode.
+    // For now, if missing, we warn or default to finding ANY (which breaks isolation but keeps legacy working if legacy didn't send salon_id)
+    if (salao_id) {
+        query.salonId = salao_id;
+    } else {
+        console.warn('checkCustomer called without salao_id. This may return incorrect customer in multi-tenant environment.');
+        // We could enforce it: return res.status(400).json({ error: 'salao_id required' });
+    }
+
+    // Try finding by clean phone OR original phone (for backward compatibility)
+    const customer = await require('../models/Customer').findOne(query);
     
     if (customer) {
       console.log(`Customer found: ${customer.name}`);

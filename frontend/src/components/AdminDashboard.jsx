@@ -5,18 +5,20 @@ import {
     Scissors, 
     Users, 
     Settings as SettingsIcon, 
-    LogOut,
-    Menu,
-    X,
-    MessageSquare,
-    BarChart2,
-    Shield
+    LogOut, 
+    Menu, 
+    X, 
+    MessageSquare, 
+    BarChart2, 
+    Shield,
+    Package
 } from 'lucide-react';
 
 import Overview from './admin/Overview';
 import Agenda from './admin/Agenda';
 import Reports from './admin/Reports';
 import Services from './admin/Services';
+import Products from './admin/Products';
 import Professionals from './admin/Professionals';
 import Customers from './admin/Customers';
 import ChatSettings from './admin/ChatSettings';
@@ -50,6 +52,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             { id: 'reports', label: 'Relatórios', icon: BarChart2 },
             { id: 'customers', label: 'Clientes', icon: Users },
             { id: 'services', label: 'Serviços', icon: Scissors },
+            { id: 'products', label: 'Produtos', icon: Package },
             { id: 'professionals', label: 'Profissionais', icon: Users },
             { id: 'chat-settings', label: 'Personalizar Chat', icon: MessageSquare },
             { id: 'settings', label: 'Configurações', icon: SettingsIcon },
@@ -65,6 +68,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             case 'reports': return <Reports />;
             case 'customers': return <Customers />;
             case 'services': return <Services />;
+            case 'products': return <Products />;
             case 'professionals': return <Professionals />;
             case 'chat-settings': return <ChatSettings />;
             case 'settings': return <Settings />;

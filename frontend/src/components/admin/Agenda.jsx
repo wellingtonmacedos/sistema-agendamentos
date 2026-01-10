@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, parseISO, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
-import { Calendar as CalendarIcon, User, Scissors, Plus, X, CheckCircle, Trash2, Clock, DollarSign } from 'lucide-react';
+import { Calendar as CalendarIcon, User, Scissors, Plus, X, CheckCircle, Trash2, Clock, DollarSign, Repeat, Package } from 'lucide-react';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
@@ -32,6 +32,12 @@ const Agenda = () => {
     const [finalPrice, setFinalPrice] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
     
+    // Products in Finish Modal
+    const [availableProducts, setAvailableProducts] = useState([]);
+    const [usedProducts, setUsedProducts] = useState([]);
+    const [selectedProductToAdd, setSelectedProductToAdd] = useState('');
+    const [selectedProductPrice, setSelectedProductPrice] = useState('');
+
     // Form State (Create)
     const [formData, setFormData] = useState({
         professionalId: '',
@@ -39,7 +45,9 @@ const Agenda = () => {
         date: '',
         time: '',
         clientName: '',
-        clientPhone: ''
+        clientPhone: '',
+        recurrenceType: 'none',
+        recurrenceCount: ''
     });
 
     // Data for selectors
@@ -96,85 +104,82 @@ const Agenda = () => {
             // Or just fetch all if volume is low, but better use range
             const res = await axios.get('/api/admin/appointments', {
                 params: {
-                    start: subMonths(start, 1).toISOString(),
-                    end: addMonths(end, 1).toISOString()
+                    start: start.toISOString(),
+                    end: end.toISOString()
                 }
             });
             
-            // Check for new appointments
-            if (isPolling && res.data.length > lastAppointmentCount && lastAppointmentCount > 0) {
-                playNotificationSound();
+            const newAppointments = res.data;
+            
+            // Sound Notification Check
+            if (isPolling && newAppointments.length > lastAppointmentCount) {
+                // playNotificationSound(); // Disabled for now to avoid annoyance
             }
+            setLastAppointmentCount(newAppointments.length);
+            setAppointments(newAppointments);
             
-            setAppointments(res.data);
-            setLastAppointmentCount(res.data.length);
-            
-            // Map to Calendar Events
-            const mappedEvents = res.data.map(app => {
-                let start = new Date(app.startTime);
-                let end = new Date(app.endTime);
-
-                // FIX: Use explicit string time if available to prevent timezone shifts
-                // This ensures the calendar shows exactly what was booked (e.g. "11:30")
-                if (app.hora_inicio && !isNaN(start.getTime())) {
-                    const [hours, minutes] = app.hora_inicio.split(':').map(Number);
-                    start.setHours(hours, minutes, 0, 0);
+            // Map to calendar events
+            const mappedEvents = newAppointments.map(apt => {
+                // Safely extract service names
+                let serviceNames = 'Serviço';
+                
+                // Try to extract from 'services' array (new structure)
+                if (apt.services && apt.services.length > 0) {
+                    // Filter valid names from objects
+                    const names = apt.services
+                        .map(s => (s && typeof s === 'object' && s.name) ? s.name : null)
+                        .filter(n => n);
                     
-                    // Update end time
-                    if (app.hora_fim) {
-                        const [endH, endM] = app.hora_fim.split(':').map(Number);
-                        end = new Date(start); // Use the corrected start date
-                        end.setHours(endH, endM, 0, 0);
-                    } else {
-                        // Recalculate based on original duration
-                        const originalDuration = (new Date(app.endTime) - new Date(app.startTime));
-                        end = new Date(start.getTime() + originalDuration);
+                    if (names.length > 0) {
+                        serviceNames = names.join(', ');
+                    } else if (apt.serviceName) {
+                        // Fallback to legacy field if array has no names
+                        serviceNames = apt.serviceName;
                     }
-                }
-
-                // Validate Start Time
-                if (isNaN(start.getTime())) {
-                    // Fallback: Try to construct from date + simple string time if available (unlikely in this schema but safe)
-                    if (app.date) {
-                         start = new Date(app.date);
-                    } else {
-                         start = new Date();
-                    }
-                }
-
-                // Validate End Time
-                if (isNaN(end.getTime())) {
-                     // Calculate duration from services
-                     const duration = app.services?.reduce((acc, s) => acc + (s.duration || 30), 0) || 30;
-                     end = new Date(start.getTime() + duration * 60000);
+                } 
+                // Fallback to legacy field if 'services' array is missing/empty
+                else if (apt.serviceName) {
+                    serviceNames = apt.serviceName;
                 }
 
                 return {
-                    id: app._id,
-                    title: `${app.customerName}`,
-                    start,
-                    end,
-                    resource: app,
-                    status: app.status
+                    id: apt._id,
+                    title: `${serviceNames} - ${apt.customerName}`,
+                    start: parseISO(apt.startTime),
+                    end: parseISO(apt.endTime),
+                    resource: apt,
+                    status: apt.status
                 };
             });
+            
             setEvents(mappedEvents);
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Erro ao carregar agendamentos", error);
         } finally {
-            setLoading(false);
+            if (!isPolling) setLoading(false);
+        }
+    };
+
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get('/api/admin/products');
+            setAvailableProducts(res.data.filter(p => p.active && p.stock > 0));
+        } catch (error) {
+            console.error("Erro ao carregar produtos", error);
         }
     };
 
     const fetchInitialData = async () => {
         if (!user) return;
         try {
+            const salonId = user.salonId || user.id;
             const [profRes, servRes] = await Promise.all([
-                axios.get(`/api/professionals?salao_id=${user.id}`),
-                axios.get(`/api/services?salao_id=${user.id}`)
+                axios.get(`/api/professionals?salao_id=${salonId}`),
+                axios.get(`/api/services?salao_id=${salonId}`)
             ]);
             setProfessionals(profRes.data);
             setServices(servRes.data);
+            fetchProducts(); // Load products
         } catch (err) {
             console.error(err);
         }
@@ -189,8 +194,9 @@ const Agenda = () => {
 
     const fetchSlots = async () => {
         try {
+            const salonId = user.salonId || user.id;
             console.log("Fetching slots with params:", {
-                salao_id: user.id,
+                salao_id: salonId,
                 data: formData.date,
                 profissional_id: formData.professionalId,
                 servicos: formData.serviceId
@@ -198,7 +204,7 @@ const Agenda = () => {
 
             const res = await axios.get('/api/disponibilidade/horarios', {
                 params: {
-                    salao_id: user.id,
+                    salao_id: salonId,
                     data: formData.date,
                     profissional_id: formData.professionalId,
                     servicos: formData.serviceId
@@ -270,11 +276,17 @@ const Agenda = () => {
     };
 
     // CRUD Actions
-    const handleDelete = async (id) => {
-        if (!window.confirm('Tem certeza que deseja excluir este agendamento?')) return;
+    const handleDelete = async (id, cancelFuture = false) => {
+        const message = cancelFuture 
+            ? 'Tem certeza que deseja excluir este e TODOS os agendamentos futuros desta recorrência?'
+            : 'Tem certeza que deseja excluir este agendamento?';
+
+        if (!window.confirm(message)) return;
         
         try {
-            await axios.delete(`/api/admin/appointments/${id}`);
+            await axios.delete(`/api/admin/appointments/${id}`, {
+                params: { cancelFuture }
+            });
             setShowDetailsModal(false);
             // Refresh
             const start = startOfMonth(currentDate);
@@ -285,21 +297,118 @@ const Agenda = () => {
         }
     };
 
+    // Update selected product price when selection changes
+    useEffect(() => {
+        const product = availableProducts.find(p => p._id === selectedProductToAdd);
+        if (product) {
+            setSelectedProductPrice(product.price);
+        } else {
+            setSelectedProductPrice('');
+        }
+    }, [selectedProductToAdd, availableProducts]);
+
+    // Product helpers for Finish Modal
+    const addProductToFinish = () => {
+        if (!selectedProductToAdd) return;
+        
+        const product = availableProducts.find(p => p._id === selectedProductToAdd);
+        if (!product) return;
+
+        // Check if already added
+        if (usedProducts.find(p => p.productId === product._id)) {
+            alert('Produto já adicionado.');
+            return;
+        }
+
+        setUsedProducts([...usedProducts, {
+            productId: product._id,
+            name: product.name,
+            price: selectedProductPrice !== '' ? Number(selectedProductPrice) : product.price,
+            quantity: 1
+        }]);
+        
+        setSelectedProductToAdd('');
+        setSelectedProductPrice('');
+    };
+
+    const updateProductQuantity = (index, newQty) => {
+        const updated = [...usedProducts];
+        updated[index].quantity = Math.max(1, Number(newQty));
+        setUsedProducts(updated);
+    };
+
+    const updateProductPrice = (index, newPrice) => {
+        const updated = [...usedProducts];
+        updated[index].price = Math.max(0, Number(newPrice));
+        setUsedProducts(updated);
+    };
+
+    const removeProductFromFinish = (index) => {
+        const updated = [...usedProducts];
+        updated.splice(index, 1);
+        setUsedProducts(updated);
+    };
+
     const handleFinishClick = (apt) => {
         // Close details, open finish
         setShowDetailsModal(false);
         setSelectedAppointment(apt);
         setFinalPrice(apt.totalPrice || 0);
         setPaymentMethod('');
+        setUsedProducts([]); // Reset products
+        setSelectedProductToAdd(''); // Reset selection
         setShowFinishModal(true);
     };
 
+    // Update final price when products change
+    useEffect(() => {
+        if (showFinishModal && selectedAppointment) {
+            console.log('Recalculating price. Used Products:', usedProducts);
+            let servicePrice = Number(selectedAppointment.totalPrice) || 0;
+            
+            // If totalPrice is 0 or missing, try to sum from services if populated
+            if (servicePrice === 0 && selectedAppointment.services && selectedAppointment.services.length > 0) {
+                 const calculated = selectedAppointment.services.reduce((sum, s) => {
+                     // Check if it's an object and has price
+                     if (s && typeof s === 'object') {
+                         return sum + (Number(s.price) || 0);
+                     }
+                     return sum;
+                 }, 0);
+                 
+                 if (calculated > 0) {
+                     servicePrice = calculated;
+                 }
+            }
+
+            const productsPrice = usedProducts.reduce((sum, p) => sum + (Number(p.price) * Number(p.quantity)), 0);
+            console.log('Service Price:', servicePrice, 'Products Price:', productsPrice);
+            setFinalPrice(servicePrice + productsPrice);
+        }
+    }, [usedProducts, showFinishModal, selectedAppointment]);
+
     const submitFinish = async (e) => {
         e.preventDefault();
+        
+        // UX Check: Did user select a product but forgot to click add?
+        if (selectedProductToAdd) {
+            const product = availableProducts.find(p => p._id === selectedProductToAdd);
+            if (product) {
+                if (!window.confirm(`Você selecionou o produto "${product.name}" mas não clicou no botão (+). Deseja adicionar este produto antes de finalizar?`)) {
+                    // User said no, proceed without it
+                } else {
+                    // User said yes, cancel submit so they can add it
+                    return;
+                }
+            }
+        }
+
+        console.log('Submitting Finish. Products:', usedProducts);
         try {
             await axios.put(`/api/appointments/${selectedAppointment._id}/finish`, {
                 finalPrice: Number(finalPrice),
-                paymentMethod
+                paymentMethod,
+                products: usedProducts
             });
             setShowFinishModal(false);
             const start = startOfMonth(currentDate);
@@ -322,7 +431,11 @@ const Agenda = () => {
                 hora_inicio: formData.time,
                 cliente: formData.clientName,
                 telefone: formData.clientPhone,
-                origin: 'panel'
+                origin: 'panel',
+                recurrence: {
+                    type: formData.recurrenceType,
+                    count: formData.recurrenceCount
+                }
             });
             setShowModal(false);
             const start = startOfMonth(currentDate);
@@ -336,7 +449,9 @@ const Agenda = () => {
                 date: '',
                 time: '',
                 clientName: '',
-                clientPhone: ''
+                clientPhone: '',
+                recurrenceType: 'none',
+                recurrenceCount: ''
             });
         } catch (err) {
             alert('Erro ao criar agendamento: ' + (err.response?.data?.erro || err.message));
@@ -399,6 +514,14 @@ const Agenda = () => {
                     selectable
                     onNavigate={handleNavigate}
                     eventPropGetter={eventStyleGetter}
+                    components={{
+                        event: ({ event }) => (
+                            <div className="flex items-center gap-1 overflow-hidden">
+                                {event.resource.recurrenceId && <Repeat size={12} className="shrink-0" />}
+                                <span className="truncate">{event.title}</span>
+                            </div>
+                        )
+                    }}
                 />
             </div>
 
@@ -475,6 +598,45 @@ const Agenda = () => {
                                 </select>
                                 {availableSlots.length === 0 && formData.date && formData.professionalId && formData.serviceId && (
                                     <p className="text-xs text-orange-500 mt-1">Nenhum horário disponível para esta combinação.</p>
+                                )}
+                            </div>
+
+                            {/* Recurrence */}
+                            <div className="pt-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                    <Repeat size={16} /> Repetição
+                                </label>
+                                <div className="flex gap-4">
+                                    <select 
+                                        className="flex-1 p-2 border rounded-lg bg-white"
+                                        value={formData.recurrenceType}
+                                        onChange={e => setFormData({...formData, recurrenceType: e.target.value})}
+                                    >
+                                        <option value="none">Não repetir</option>
+                                        <option value="weekly">Semanalmente</option>
+                                        <option value="biweekly">Quinzenalmente</option>
+                                        <option value="monthly">Mensalmente</option>
+                                        <option value="yearly">Anualmente</option>
+                                    </select>
+
+                                    {formData.recurrenceType !== 'none' && (
+                                        <input 
+                                            type="number" 
+                                            min="2" 
+                                            max="52"
+                                            placeholder="Qtd"
+                                            className="w-24 p-2 border rounded-lg"
+                                            value={formData.recurrenceCount}
+                                            onChange={e => setFormData({...formData, recurrenceCount: e.target.value})}
+                                            title="Quantidade de repetições"
+                                            required
+                                        />
+                                    )}
+                                </div>
+                                {formData.recurrenceType !== 'none' && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Serão criados agendamentos individuais. O sistema verificará a disponibilidade de todos.
+                                    </p>
                                 )}
                             </div>
 
@@ -654,21 +816,54 @@ const Agenda = () => {
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            {/* Recurrence Info */}
+                            {selectedAppointment.recurrenceType && (
+                                <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 mt-2 mb-2">
+                                    <div className="flex items-center gap-2 text-purple-700 font-medium text-sm mb-1">
+                                        <Repeat size={14} />
+                                        Agendamento Recorrente
+                                    </div>
+                                    <p className="text-xs text-purple-600">
+                                        Tipo: {selectedAppointment.recurrenceType === 'weekly' ? 'Semanal' : 
+                                               selectedAppointment.recurrenceType === 'biweekly' ? 'Quinzenal' :
+                                               selectedAppointment.recurrenceType === 'monthly' ? 'Mensal' : 'Anual'}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3 pt-2">
                                 {selectedAppointment.status !== 'completed' && selectedAppointment.status !== 'cancelled' && (
                                     <>
                                         <button 
                                             onClick={() => handleFinishClick(selectedAppointment)}
-                                            className="flex-1 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
+                                            className="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
                                         >
                                             <CheckCircle size={18} /> Finalizar
                                         </button>
-                                        <button 
-                                            onClick={() => handleDelete(selectedAppointment._id)}
-                                            className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-medium hover:bg-red-200 flex items-center justify-center gap-2"
-                                        >
-                                            <Trash2 size={18} /> Cancelar
-                                        </button>
+                                        
+                                        {selectedAppointment.recurrenceId ? (
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => handleDelete(selectedAppointment._id, false)}
+                                                    className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-medium hover:bg-red-200 flex items-center justify-center gap-2 text-sm"
+                                                >
+                                                    <Trash2 size={16} /> Excluir Este
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(selectedAppointment._id, true)}
+                                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 flex items-center justify-center gap-2 text-sm"
+                                                >
+                                                    <Trash2 size={16} /> Excluir Futuros
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleDelete(selectedAppointment._id)}
+                                                className="w-full bg-red-100 text-red-600 py-2 rounded-lg font-medium hover:bg-red-200 flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 size={18} /> Cancelar
+                                            </button>
+                                        )}
                                     </>
                                 )}
                                 {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
@@ -699,6 +894,92 @@ const Agenda = () => {
                             <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                                 <p className="text-sm text-gray-500">Cliente: <span className="font-bold text-gray-800">{selectedAppointment.customerName}</span></p>
                                 <p className="text-sm text-gray-500">Valor Estimado: <span className="font-bold text-gray-800">R$ {selectedAppointment.totalPrice?.toFixed(2)}</span></p>
+                            </div>
+
+                            {/* Products Section */}
+                            <div className="border-t border-b border-gray-100 py-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <Package size={16} /> Produtos Utilizados
+                                </label>
+                                
+                                <div className="flex gap-2 mb-2 items-center">
+                                    <select 
+                                        className="flex-1 p-2 border rounded-lg text-sm"
+                                        value={selectedProductToAdd}
+                                        onChange={e => setSelectedProductToAdd(e.target.value)}
+                                    >
+                                        <option value="">Adicionar produto...</option>
+                                        {availableProducts.map(p => (
+                                            <option key={p._id} value={p._id}>
+                                                {p.name} (Estoque: {p.stock})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    {selectedProductToAdd && (
+                                        <div className="w-28 relative">
+                                            <span className="absolute left-2 top-2 text-gray-500 text-xs">R$</span>
+                                            <input 
+                                                type="number" 
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Preço"
+                                                className="w-full p-2 pl-7 border rounded-lg text-sm"
+                                                value={selectedProductPrice}
+                                                onChange={(e) => setSelectedProductPrice(e.target.value)}
+                                                title="Preço unitário do produto"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <button 
+                                        type="button"
+                                        onClick={addProductToFinish}
+                                        disabled={!selectedProductToAdd}
+                                        className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Used Products List */}
+                                {usedProducts.length > 0 && (
+                                    <div className="space-y-2 max-h-40 overflow-y-auto bg-gray-50 p-2 rounded-lg">
+                                        {usedProducts.map((p, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 text-sm bg-white p-2 rounded border">
+                                                <div className="flex-1">
+                                                    <p className="font-medium truncate">{p.name}</p>
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                        <span>Qtd:</span>
+                                                        <input 
+                                                            type="number" 
+                                                            min="1"
+                                                            className="w-12 p-1 border rounded"
+                                                            value={p.quantity}
+                                                            onChange={(e) => updateProductQuantity(idx, e.target.value)}
+                                                        />
+                                                        <span>R$:</span>
+                                                        <input 
+                                                            type="number" 
+                                                            min="0"
+                                                            step="0.01"
+                                                            className="w-16 p-1 border rounded"
+                                                            value={p.price}
+                                                            onChange={(e) => updateProductPrice(idx, e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => removeProductFromFinish(idx)}
+                                                    className="text-red-500 hover:text-red-700 p-1"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div>

@@ -52,20 +52,29 @@ router.delete('/blocks/:id', authMiddleware, adminController.deleteBlock);
 // Helper route to get salon info (protected)
 router.get('/me', authMiddleware, async (req, res) => {
     try {
-        const salon = await require('../models/Salon').findById(req.user.id);
+        const Salon = require('../models/Salon');
+        // Use req.user.salonId to get establishment data
+        const salon = await Salon.findById(req.user.salonId);
+
         if (!salon) return res.status(404).json({ error: 'Salão não encontrado' });
         
         // Return safe data
         res.json({
             id: salon._id,
+            userId: req.user.id,
             name: salon.name,
+            userName: req.user.name,
             email: salon.email,
-            role: salon.role,
+            userEmail: req.user.email,
+            role: req.user.role,
             workingHours: salon.workingHours,
             settings: salon.settings,
-            chatConfig: salon.chatConfig // Include chatConfig
+            chatConfig: salon.chatConfig,
+            slug: salon.slug,
+            chatbotLink: salon.chatbotLink
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Erro ao buscar dados do salão' });
     }
 });
@@ -74,15 +83,30 @@ router.get('/me', authMiddleware, async (req, res) => {
 router.get('/public/config', async (req, res) => {
     try {
         const Salon = require('../models/Salon');
-        // Get the first active salon (excluding SUPER_ADMIN)
-        const salon = await Salon.findOne({ 
+        const { salao_id, slug } = req.query;
+        
+        let query = { 
             active: true, 
             deletedAt: null,
             role: { $ne: 'SUPER_ADMIN' }
-        });
+        };
+
+        if (salao_id) {
+            query._id = salao_id;
+        } else if (slug) {
+            query.slug = slug;
+        }
+
+        // Get specific salon or first active one
+        const salon = await Salon.findOne(query);
         
-        if (salon && salon.chatConfig) {
-            res.json(salon.chatConfig);
+        if (salon) {
+            const config = salon.chatConfig ? salon.chatConfig.toObject() : {};
+            // Inject salon info for context
+            config.salonId = salon._id;
+            config.salonName = salon.name;
+            config.slug = salon.slug;
+            res.json(config);
         } else {
             // Default config if no salon or no config
             res.json({}); 
@@ -93,6 +117,37 @@ router.get('/public/config', async (req, res) => {
     }
 });
 
+// Helper endpoint to resolve slug to salon ID (for frontend routing)
+router.get('/public/salon/:slug', async (req, res) => {
+    try {
+        const Salon = require('../models/Salon');
+        const { slug } = req.params;
+        
+        const salon = await Salon.findOne({ 
+            slug: slug, 
+            active: true, 
+            deletedAt: null 
+        }).select('_id name slug chatbotLink settings chatConfig phone workingHours address');
+
+        if (!salon) {
+            return res.status(404).json({ error: 'Estabelecimento não encontrado' });
+        }
+
+        res.json(salon);
+    } catch (error) {
+        console.error("Error resolving salon slug:", error);
+        res.status(500).json({ error: 'Erro ao buscar estabelecimento' });
+    }
+});
+
+
+const productController = require('../controllers/productController');
+
+// --- Product Routes ---
+router.post('/admin/products', authMiddleware, productController.createProduct);
+router.get('/admin/products', authMiddleware, productController.getProducts);
+router.put('/admin/products/:id', authMiddleware, productController.updateProduct);
+router.delete('/admin/products/:id', authMiddleware, productController.deleteProduct);
 
 router.get('/admin/appointments', authMiddleware, appointmentController.getAllAppointments);
 router.delete('/admin/appointments/:id', authMiddleware, adminController.deleteAppointment);
