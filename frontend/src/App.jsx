@@ -1125,8 +1125,8 @@ function App() {
             </div>
           )}
           
-          <div className="flex-1">
-            <h1 className="font-bold text-lg" style={{ color: chatConfig.headerTextColor }}>{chatConfig.assistantName}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-lg truncate" style={{ color: chatConfig.headerTextColor }}>{chatConfig.assistantName}</h1>
             <p className="text-xs text-green-500 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online agora
             </p>
@@ -1134,7 +1134,7 @@ function App() {
           <div className="flex gap-2">
             <button 
                 onClick={handleReset} 
-                className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
+                className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
                 title="Voltar ao Início"
             >
                 <History size={14} /> 
@@ -1142,11 +1142,12 @@ function App() {
             </button>
             <button 
                 onClick={handleMyHistoryClick} 
-                className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
+                className="text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm transition-all"
                 title="Ver meus agendamentos"
             >
                 <Calendar size={14} /> 
-                Meus Agendamentos
+                <span className="hidden sm:inline">Meus Agendamentos</span>
+                <span className="sm:hidden">Agenda</span>
             </button>
             {/* Admin button removed as per request */}
           </div>
