@@ -1,0 +1,105 @@
+[TAILING] Tailing last 50 lines for [0] process (change the value with --lines option)
+/root/.pm2/logs/app.cwcompany.com.br-out.log last 50 lines:
+0|app.cwco |     "customerPhone": "79998579844",
+0|app.cwco |     "date": "2026-01-09T09:30:00.000Z",
+0|app.cwco |     "status": "confirmed"
+0|app.cwco |   }
+0|app.cwco | ]
+0|app.cwco | Encontrados 2 agendamentos.
+0|app.cwco | [Availability Check] Salon: 507f1f77bcf86cd799439011, Date: 2026-01-11, Prof: 695d9af48c38e84d0a13f4dc, Services: 695d9af48c38e84d0a13f4d7
+0|app.cwco | [Availability Check] Salon: 507f1f77bcf86cd799439011, Date: 2026-01-09, Prof: 695d9af48c38e84d0a13f4dc, Services: 695d9af48c38e84d0a13f4d7
+0|app.cwco | [NOTIFICAÇÃO] Enviando confirmação para Wellington Santos...
+0|app.cwco | [WHATSAPP MOCK] To: 5511999999999 | Message: Olá Wellington Santos, seu agendamento foi confirmado para dia 09/01/2026 às 10:30.
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | [Availability Check] Salon: 507f1f77bcf86cd799439011, Date: 2026-01-09, Prof: 695d9af48c38e84d0a13f4dc, Services: 695d9af48c38e84d0a13f4d7
+0|app.cwco | [Availability Check] Salon: 507f1f77bcf86cd799439011, Date: 2026-01-09, Prof: 695d9af48c38e84d0a13f4dc, Services: 695d9af48c38e84d0a13f4d7
+0|app.cwco | [NOTIFICAÇÃO] Enviando confirmação para Wellington Santos...
+0|app.cwco | [WHATSAPP MOCK] To: 5511999999999 | Message: Olá Wellington Santos, seu agendamento foi confirmado para dia 09/01/2026 às 14:00.
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Login failed: Password mismatch for admin@salao.com.
+0|app.cwco | [Admin] Finishing appointment 695e6ec4893f6c9b68c13d8a. Final Price Input: 50, Payment Method: pix
+0|app.cwco | [Admin] Appointment finished. Status: completed, Final Price: 50
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | [SuperAdmin] Listando administradores: 1 encontrados.
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Login failed: Password mismatch for admin@salao.com.
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Login failed: Password mismatch for admin@salao.com.
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+0|app.cwco | Checking customer: Input="79998579844" Clean="79998579844"
+0|app.cwco | Customer found: Wellington Santos
+
+/root/.pm2/logs/app.cwcompany.com.br-error.log last 50 lines:
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | Error: ENOENT: no such file or directory, stat '/var/www/app.cwcompany.com.br/frontend/dist/index.html'
+0|app.cwco | ReferenceError: require is not defined in ES module scope, you can use import instead
+0|app.cwco | This file is being treated as an ES module because it has a '.js' file extension and '/var/www/app.cwcompany.com.br/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+0|app.cwco |     at file:///var/www/app.cwcompany.com.br/src/server.js:1:17
+0|app.cwco |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|app.cwco |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+0|app.cwco | ReferenceError: require is not defined in ES module scope, you can use import instead
+0|app.cwco | This file is being treated as an ES module because it has a '.js' file extension and '/var/www/app.cwcompany.com.br/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+0|app.cwco |     at file:///var/www/app.cwcompany.com.br/src/server.js:1:17
+0|app.cwco |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|app.cwco |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+

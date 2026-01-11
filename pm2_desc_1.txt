@@ -1,0 +1,61 @@
+ Describing process with id 1 - name agenda-feminino 
+┌───────────────────┬───────────────────────────────────────────┐
+│ status            │ online                                    │
+│ name              │ agenda-feminino                           │
+│ namespace         │ default                                   │
+│ version           │ 1.2.0                                     │
+│ restarts          │ 2                                         │
+│ uptime            │ 2D                                        │
+│ script path       │ /var/www/agenda/src/server.js             │
+│ script args       │ N/A                                       │
+│ error log path    │ /root/.pm2/logs/agenda-feminino-error.log │
+│ out log path      │ /root/.pm2/logs/agenda-feminino-out.log   │
+│ pid path          │ /root/.pm2/pids/agenda-feminino-1.pid     │
+│ interpreter       │ node                                      │
+│ interpreter args  │ N/A                                       │
+│ script id         │ 1                                         │
+│ exec cwd          │ /var/www/agenda                           │
+│ exec mode         │ fork_mode                                 │
+│ node.js version   │ 20.19.6                                   │
+│ node env          │ production                                │
+│ watch & reload    │ ✘                                         │
+│ unstable restarts │ 0                                         │
+│ created at        │ 2026-01-07T17:52:23.291Z                  │
+└───────────────────┴───────────────────────────────────────────┘
+ Actions available 
+┌────────────────────────┐
+│ km:heapdump            │
+│ km:cpu:profiling:start │
+│ km:cpu:profiling:stop  │
+│ km:heap:sampling:start │
+│ km:heap:sampling:stop  │
+└────────────────────────┘
+ Trigger via: pm2 trigger agenda-feminino <action_name>
+
+ Code metrics value 
+┌────────────────────────┬───────────┐
+│ Used Heap Size         │ 29.24 MiB │
+│ Heap Usage             │ 74.99 %   │
+│ Heap Size              │ 38.99 MiB │
+│ Event Loop Latency p95 │ 1.06 ms   │
+│ Event Loop Latency     │ 0.32 ms   │
+│ Active handles         │ 11        │
+│ Active requests        │ 0         │
+│ HTTP                   │ 0 req/min │
+│ HTTP P95 Latency       │ 8 ms      │
+│ HTTP Mean Latency      │ 3 ms      │
+└────────────────────────┴───────────┘
+ Divergent env variables from local env 
+┌────────────────┬───────────────────────────────────────┐
+│ SSH_CLIENT     │ 177.70.164.104 5006 22                │
+│ SHLVL          │ 1                                     │
+│ _              │ /usr/bin/pm2                          │
+│ XDG_SESSION_ID │ 228                                   │
+│ PWD            │ /var/www/agenda                       │
+│ SSH_CONNECTION │ 177.70.164.104 5006 46.224.184.226 22 │
+└────────────────┴───────────────────────────────────────┘
+
+ Add your own code metrics: http://bit.ly/code-metrics
+ Use `pm2 logs agenda-feminino [--lines 1000]` to display logs
+ Use `pm2 env 1` to display environment variables
+ Use `pm2 monit` to monitor CPU and Memory usage agenda-feminino

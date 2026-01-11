@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import ToastNotification from './ToastNotification';
 import { 
     LayoutDashboard, 
     Calendar, 
@@ -28,6 +30,46 @@ import SuperAdminUsers from './admin/SuperAdminUsers';
 const AdminDashboard = ({ user, onLogout }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [lastTimestamp, setLastTimestamp] = useState(null);
+
+    const playNotificationSound = () => {
+        try {
+            const audio = new Audio('/ringtone.wav');
+            audio.play().catch(e => console.log("Audio play failed (interaction needed):", e));
+        } catch (e) {
+            console.error("Audio error:", e);
+        }
+    };
+
+    useEffect(() => {
+        const checkLatest = async () => {
+             try {
+                 const res = await axios.get('/api/admin/appointments/latest');
+                 if (res.data.timestamp) {
+                     const ts = new Date(res.data.timestamp).getTime();
+                     
+                     // If it's the first load, just set the timestamp
+                     if (lastTimestamp === null) {
+                         setLastTimestamp(ts);
+                     } 
+                     // If we have a new timestamp that is greater than the last one
+                     else if (ts > lastTimestamp) {
+                         playNotificationSound();
+                         setToast({ message: 'Novo agendamento recebido!', type: 'success' });
+                         setLastTimestamp(ts);
+                     }
+                 }
+             } catch (e) {
+                 console.error("Polling error", e);
+             }
+        };
+
+        const interval = setInterval(checkLatest, 30000); // 30 seconds
+        checkLatest(); // Run immediately on mount
+
+        return () => clearInterval(interval);
+    }, [lastTimestamp]);
 
     const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 

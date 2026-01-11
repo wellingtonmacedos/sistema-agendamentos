@@ -1,0 +1,1 @@
+pm2 describe 0 > /tmp/pm2_desc_0_new.txt

@@ -1,0 +1,1 @@
+pm2 logs 0 --lines 50 > /tmp/pm2_logs_0.txt

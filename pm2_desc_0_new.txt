@@ -1,0 +1,61 @@
+ Describing process with id 0 - name app.cwcompany.com.br 
+┌───────────────────┬────────────────────────────────────────────────┐
+│ status            │ online                                         │
+│ name              │ app.cwcompany.com.br                           │
+│ namespace         │ default                                        │
+│ version           │ 1.3.0                                          │
+│ restarts          │ 3                                              │
+│ uptime            │ 3D                                             │
+│ script path       │ /var/www/app.cwcompany.com.br/src/server.js    │
+│ script args       │ N/A                                            │
+│ error log path    │ /root/.pm2/logs/app.cwcompany.com.br-error.log │
+│ out log path      │ /root/.pm2/logs/app.cwcompany.com.br-out.log   │
+│ pid path          │ /root/.pm2/pids/app.cwcompany.com.br-0.pid     │
+│ interpreter       │ node                                           │
+│ interpreter args  │ N/A                                            │
+│ script id         │ 0                                              │
+│ exec cwd          │ /var/www/app.cwcompany.com.br                  │
+│ exec mode         │ fork_mode                                      │
+│ node.js version   │ 20.19.6                                        │
+│ node env          │ N/A                                            │
+│ watch & reload    │ ✘                                              │
+│ unstable restarts │ 0                                              │
+│ created at        │ 2026-01-07T00:58:21.858Z                       │
+└───────────────────┴────────────────────────────────────────────────┘
+ Actions available 
+┌────────────────────────┐
+│ km:heapdump            │
+│ km:cpu:profiling:start │
+│ km:cpu:profiling:stop  │
+│ km:heap:sampling:start │
+│ km:heap:sampling:stop  │
+└────────────────────────┘
+ Trigger via: pm2 trigger app.cwcompany.com.br <action_name>
+
+ Code metrics value 
+┌────────────────────────┬──────────────┐
+│ Used Heap Size         │ 36.27 MiB    │
+│ Heap Usage             │ 91.85 %      │
+│ Heap Size              │ 39.49 MiB    │
+│ Event Loop Latency p95 │ 1.06 ms      │
+│ Event Loop Latency     │ 0.29 ms      │
+│ Active handles         │ 8            │
+│ Active requests        │ 0            │
+│ HTTP                   │ 0.05 req/min │
+│ HTTP P95 Latency       │ 13 ms        │
+│ HTTP Mean Latency      │ 3 ms         │
+└────────────────────────┴──────────────┘
+ Divergent env variables from local env 
+┌────────────────┬───────────────────────────────────────┐
+│ SSH_CLIENT     │ 177.70.164.104 6132 22                │
+│ SHLVL          │ 1                                     │
+│ _              │ /usr/bin/pm2                          │
+│ XDG_SESSION_ID │ 40                                    │
+│ PWD            │ /var/www/app.cwcompany.com.br         │
+│ SSH_CONNECTION │ 177.70.164.104 6132 46.224.184.226 22 │
+└────────────────┴───────────────────────────────────────┘
+
+ Add your own code metrics: http://bit.ly/code-metrics
+ Use `pm2 logs app.cwcompany.com.br [--lines 1000]` to display logs
+ Use `pm2 env 0` to display environment variables
+ Use `pm2 monit` to monitor CPU and Memory usage app.cwcompany.com.br
