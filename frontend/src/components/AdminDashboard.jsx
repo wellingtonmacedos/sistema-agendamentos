@@ -78,6 +78,13 @@ const AdminDashboard = ({ user, onLogout }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
+            {toast && (
+                <ToastNotification 
+                    message={toast.message} 
+                    type={toast.type} 
+                    onClose={() => setToast(null)} 
+                />
+            )}
             {/* Sidebar (Desktop) */}
             <aside className="hidden md:flex flex-col w-64 bg-white border-r h-screen sticky top-0">
                 <div className="p-6 border-b">

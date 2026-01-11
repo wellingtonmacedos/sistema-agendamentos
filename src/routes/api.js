@@ -27,6 +27,7 @@ router.get('/agendamentos/:id/ics', appointmentController.downloadICS);
 
 // Protected: Admin / Management Routes
 
+router.get('/admin/appointments/latest', authMiddleware, appointmentController.getLatestAppointmentTimestamp);
 router.get('/admin/customers', authMiddleware, customerController.getCustomers);
 router.post('/admin/customers', authMiddleware, customerController.createCustomer);
 router.put('/admin/customers/:id', authMiddleware, customerController.updateCustomer);

@@ -279,6 +279,28 @@ const getAllAppointments = async (req, res) => {
     }
 };
 
+const getLatestAppointmentTimestamp = async (req, res) => {
+    try {
+        const filter = req.user ? { salonId: req.user.salonId } : {};
+        const Appointment = require('../models/Appointment');
+        
+        // Find the most recently created appointment
+        const latest = await Appointment.findOne(filter)
+            .sort({ createdAt: -1 })
+            .select('createdAt')
+            .lean();
+
+        if (!latest) {
+            return res.json({ timestamp: null });
+        }
+
+        res.json({ timestamp: latest.createdAt });
+    } catch (error) {
+        console.error("Error getting latest timestamp:", error);
+        res.status(500).json({ error: 'Erro ao verificar atualizações' });
+    }
+};
+
 const updateAppointment = async (req, res) => {
     try {
         const { id } = req.params;
@@ -407,5 +429,6 @@ module.exports = {
   updateAppointment,
   checkCustomer,
   getMyAppointments,
-  cancelAppointment
+  cancelAppointment,
+  getLatestAppointmentTimestamp
 };
