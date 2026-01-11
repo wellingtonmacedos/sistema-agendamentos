@@ -33,6 +33,7 @@ export const subscribeToPush = async (role = 'ADMIN', metadata = {}) => {
         
         // Validation of response structure
         if (!response.data || !response.data.publicKey) {
+            console.error('Invalid VAPID response:', response.data);
             throw new Error('Failed to retrieve VAPID key from server');
         }
 
@@ -40,10 +41,17 @@ export const subscribeToPush = async (role = 'ADMIN', metadata = {}) => {
         
         // Validate key format/content
         if (typeof publicKey !== 'string' || publicKey.length === 0) {
+             console.error('Empty/Invalid VAPID key:', publicKey);
              throw new Error('VAPID public key is empty or invalid format');
         }
 
-        const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+        let convertedVapidKey;
+        try {
+            convertedVapidKey = urlBase64ToUint8Array(publicKey);
+        } catch (e) {
+            console.error('VAPID Key conversion failed:', e);
+            throw new Error('Invalid VAPID Key encoding');
+        }
 
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,

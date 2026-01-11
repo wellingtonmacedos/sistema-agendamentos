@@ -38,13 +38,19 @@ const Settings = () => {
                 alert('Você bloqueou as notificações. Por favor, habilite-as nas configurações do seu navegador.');
                 return;
             }
-            const result = await subscribeToPush();
+            
+            setLoading(true);
+            const result = await subscribeToPush('ADMIN');
+            
             if (result) {
                 setPushPermission('granted');
                 alert('Notificações ativadas com sucesso!');
             }
         } catch (error) {
-            alert('Erro ao ativar notificações. Verifique se o app está instalado ou rodando em HTTPS/localhost.');
+            console.error("Erro ativar push admin:", error);
+            alert(`Erro ao ativar notificações: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
