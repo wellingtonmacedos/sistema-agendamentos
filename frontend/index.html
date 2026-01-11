@@ -9,14 +9,23 @@
       (function() {
         // Dynamic Manifest Selection (Admin vs Client PWA)
         const isClient = window.location.pathname.startsWith('/chat') || window.location.pathname.startsWith('/public');
-        const manifestPath = isClient ? '/manifest-client.json' : '/manifest.webmanifest';
+        let manifestPath = isClient ? '/manifest-client.json' : '/manifest.webmanifest';
         
+        // If we are in a specific salon chat, use the dynamic manifest from backend
+        const pathParts = window.location.pathname.split('/');
+        // Format: /chat/salonId
+        if (pathParts[1] === 'chat' && pathParts[2]) {
+            const salonId = pathParts[2];
+            manifestPath = `/dynamic-manifest/${salonId}`;
+        }
+
         // Try to find existing link (in case injected) or create new
         // We observe DOM to catch if Vite injects it later
         const updateManifest = () => {
           let link = document.querySelector('link[rel="manifest"]');
           if (link) {
-            if (link.href !== window.location.origin + manifestPath) {
+            // Check if we need to update the href
+            if (link.href !== window.location.origin + manifestPath && !link.href.endsWith(manifestPath)) {
                 link.href = manifestPath;
             }
           } else {

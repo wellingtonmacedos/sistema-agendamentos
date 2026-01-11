@@ -31,6 +31,34 @@ connectDB().then(() => {
 // Routes
 app.use('/api', apiRoutes);
 
+// Dynamic Manifest for PWA (specific salon)
+app.get('/dynamic-manifest/:salonId', (req, res) => {
+    const { salonId } = req.params;
+    // Try to find manifest in dist (production) or public (dev fallback)
+    let manifestPath = path.join(__dirname, '../frontend/dist/manifest-client.json');
+    
+    if (!fs.existsSync(manifestPath)) {
+        manifestPath = path.join(__dirname, '../frontend/public/manifest-client.json');
+    }
+
+    fs.readFile(manifestPath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Manifest read error:', err);
+            return res.status(404).send('Manifest not found');
+        }
+        try {
+            const json = JSON.parse(data);
+            json.start_url = `/chat/${salonId}`;
+            // Optional: You can also customize the name if you have salon info
+            // json.name = `Agendamento - ${salonId}`; 
+            res.json(json);
+        } catch (e) {
+            console.error('Manifest parse error:', e);
+            res.status(500).send('Error parsing manifest');
+        }
+    });
+});
+
 // Catch-all handler for SPA (React)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
