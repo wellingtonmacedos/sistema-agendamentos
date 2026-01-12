@@ -58,7 +58,7 @@ function App() {
         console.log('[Push] Requesting permission for:', { salonId, phone });
 
         if (!salonId || !phone) {
-            alert('Erro: Dados incompletos para notificação. Tente recarregar.');
+            alert(getMessage('notificationIncompleteData'));
             return;
         }
 
@@ -72,16 +72,16 @@ function App() {
 
         if (success) {
             setNotifPermission('granted');
-            alert('Notificações ativadas com sucesso! Você será avisado sobre este agendamento.'); 
+            alert(getMessage('notificationSuccess')); 
         } else {
-            alert('Não foi possível ativar as notificações. Verifique as permissões do navegador.');
+            alert(getMessage('notificationError'));
         }
     } catch (err) {
         console.error("Failed to enable notifications", err);
         if (err.message.includes('not supported')) {
-            alert('Seu navegador não suporta notificações ou você está em modo anônimo.');
+            alert(getMessage('notificationNotSupported'));
         } else {
-            alert(`Erro ao ativar notificações: ${err.message}. Tente recarregar a página.`);
+            alert(getMessage('notificationErrorGeneric', err.message));
         }
     } finally {
         setLoading(false);
@@ -130,8 +130,9 @@ function App() {
   const roundedClass = isFeminine ? 'rounded-3xl' : 'rounded-xl';
   const buttonRoundedClass = isFeminine ? 'rounded-full' : 'rounded-lg';
   const animClass = isFeminine ? 'hover:scale-[1.02] transition-transform duration-300' : 'hover:opacity-90 transition-opacity';
+  const fontClass = isFeminine ? 'font-soft' : '';
 
-   useEffect(() => {
+  useEffect(() => {
     const initApp = async () => {
         try {
             // Check for slug in URL (e.g., /chat/:slug)
@@ -240,7 +241,7 @@ function App() {
             goToStep('MY_APPOINTMENTS');
         }
     } catch (err) {
-        addMessage('Erro ao buscar seus agendamentos.');
+        addMessage(getMessage('errorFetchingAppointments'));
     } finally {
         setLoading(false);
     }
@@ -264,7 +265,7 @@ function App() {
             handleBack(); 
         }
     } catch (err) {
-        addMessage('Erro ao cancelar agendamento.');
+        addMessage(getMessage('errorCancellingAppointment'));
     } finally {
         setLoading(false);
     }
@@ -330,7 +331,7 @@ function App() {
              addMessage(getMessage('noSalons'));
         }
     } catch (err) {
-        addMessage('Erro ao carregar salões. Tente recarregar a página.');
+        addMessage(getMessage('errorLoadingSalons'));
     } finally {
         setLoading(false);
     }
@@ -357,7 +358,7 @@ function App() {
       addMessage(getMessage('chooseService'));
       goToStep('SERVICE');
     } catch (err) {
-      addMessage('Erro ao carregar serviços.');
+      addMessage(getMessage('errorLoadingServices'));
     } finally {
       setLoading(false);
     }
@@ -408,7 +409,7 @@ function App() {
             addMessage(getMessage('noProfessionals'));
         }
     } catch (err) {
-        addMessage('Erro ao carregar profissionais.');
+        addMessage(getMessage('errorLoadingProfessionals'));
     } finally {
         setLoading(false);
     }
@@ -472,7 +473,7 @@ function App() {
       }
     } catch (err) {
       console.error(err);
-      addMessage('Erro ao buscar horários.');
+      addMessage(getMessage('errorFetchingSlots'));
     } finally {
       setLoading(false);
     }
@@ -521,14 +522,20 @@ function App() {
       addMessage(`${successMsg}\n${serviceNames} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
       
       if (chatConfig.enableSuccessMeme !== false) {
-        const memeUrl = chatConfig.successMemeUrl || 'https://media.tenor.com/l5_u4JktKxYAAAAC/thumbs-up-computer.gif';
+        let memeUrl = chatConfig.successMemeUrl || 'https://media.tenor.com/l5_u4JktKxYAAAAC/thumbs-up-computer.gif';
+
+        // Use specific GIF for feminine profile
+        if (chatConfig.chat_profile === 'feminine') {
+            memeUrl = 'https://media2.giphy.com/media/v1.Y2lkPTZjMDliOTUyaXN3aGk5cnJuOWk5dHc4bDZ0MXMwbzV3aXp6OGcyOW4xZzFobDV5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4BSwYeam5GXKdqMXd0/200w.gif';
+        }
+
         addMessage(memeUrl, 'bot', 'image');
       }
 
       addMessage(getMessage('addToCalendar'), 'bot');
       setStep('CALENDAR_DECISION');
     } catch (err) {
-      addMessage('Ocorreu um erro ao finalizar. Tente novamente.');
+      addMessage(getMessage('errorFinalizing'));
     } finally {
       setLoading(false);
     }
@@ -626,14 +633,14 @@ function App() {
                         className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all hover:opacity-90"
                         style={{ backgroundColor: chatConfig.buttonColor }}
                     >
-                        Confirmar ({selectedCount}) <Send size={16} />
+                        {getMessage('confirmCount', selectedCount)} <Send size={16} />
                     </button>
                 </div>
             )}
             
             {/* Helper Text */}
             <div className="text-center text-xs text-slate-400 animate-pulse">
-                Arraste para o lado para ver mais opções →
+                {getMessage('swipeHint')}
             </div>
           </div>
         );
@@ -717,7 +724,7 @@ function App() {
           <div className="grid gap-2">
             <button 
               onClick={() => {
-                addMessage('Sim, escolher outra data', 'user');
+                addMessage(getMessage('yesChooseAnotherDate'), 'user');
                 goToStep('DATE');
               }} 
               className="card hover:opacity-90 text-left flex items-center gap-3 transition-all"
@@ -727,12 +734,12 @@ function App() {
               }}
             >
               <div className="bg-white/20 p-2 rounded-full text-white"><Calendar size={20} /></div>
-              <div className="font-medium">Sim, escolher outra data</div>
+              <div className="font-medium">{getMessage('yesChooseAnotherDate')}</div>
             </button>
             <button 
               onClick={() => {
-                addMessage('Não, encerrar atendimento', 'user');
-                addMessage('Entendido. Agradecemos o contato!', 'bot');
+                addMessage(getMessage('noCancelService'), 'user');
+                addMessage(getMessage('cancelAcknowledgement'), 'bot');
                 // Reset flow after a delay
                 setTimeout(() => {
                     handleReset();
@@ -742,21 +749,21 @@ function App() {
               style={{ color: '#ef4444' }} // Red for cancel
             >
               <div className="bg-red-50 p-2 rounded-full text-red-500"><Trash2 size={20} /></div>
-              <div className="font-medium">Não, encerrar atendimento</div>
+              <div className="font-medium">{getMessage('noCancelService')}</div>
             </button>
           </div>
         );
       case 'CONFIRM':
         return (
             <div className="card bg-slate-50">
-                <h3 className="font-bold mb-2">Resumo</h3>
+                <h3 className="font-bold mb-2">{getMessage('summaryTitle')}</h3>
                 <div className="text-sm space-y-1 mb-4">
-                    <p><span className="text-gray-500">Cliente:</span> {booking.clientName}</p>
-                    <p><span className="text-gray-500">Telefone:</span> {booking.clientPhone}</p>
-                    <p><span className="text-gray-500">Serviço:</span> {booking.service?.name}</p>
-                    <p><span className="text-gray-500">Profissional:</span> {booking.professional?.name}</p>
-                    <p><span className="text-gray-500">Data:</span> {booking.date && format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')} às {booking.time}</p>
-                    <p><span className="text-gray-500">Total:</span> R$ {booking.service?.price.toFixed(2)}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryClient')}</span> {booking.clientName}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryPhone')}</span> {booking.clientPhone}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryService')}</span> {booking.service?.name}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryProfessional')}</span> {booking.professional?.name}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryDate')}</span> {booking.date && format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')} às {booking.time}</p>
+                    <p><span className="text-gray-500">{getMessage('summaryTotal')}</span> R$ {booking.service?.price.toFixed(2)}</p>
                 </div>
                 <button 
                     onClick={handleConfirm} 
@@ -772,27 +779,27 @@ function App() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => {
-                addMessage('Sim', 'user');
-                addMessage('Escolha sua agenda:', 'bot');
+                addMessage(getMessage('yes'), 'user');
+                addMessage(getMessage('calendarOptionPrompt'), 'bot');
                 setStep('CALENDAR_OPTIONS');
               }}
               className="card p-3 flex flex-col items-center gap-2 hover:opacity-90 transition-all"
               style={{ backgroundColor: chatConfig.buttonColor, color: '#fff' }}
             >
               <div className="bg-white/20 p-2 rounded-full"><CheckCircle size={24} /></div>
-              <div className="font-bold">SIM</div>
+              <div className="font-bold">{getMessage('yes').toUpperCase()}</div>
             </button>
             <button
               onClick={() => {
-                addMessage('Não', 'user');
-                addMessage('Combinado! Te esperamos lá. 😉', 'bot');
+                addMessage(getMessage('no'), 'user');
+                addMessage(getMessage('calendarCombinedPrompt'), 'bot');
                 setStep('FINAL');
               }}
               className="card p-3 flex flex-col items-center gap-2 hover:bg-slate-100 transition-all bg-white border border-slate-200"
               style={{ color: '#64748b' }}
             >
               <div className="bg-slate-100 p-2 rounded-full"><X size={24} /></div>
-              <div className="font-bold">NÃO</div>
+              <div className="font-bold">{getMessage('no').toUpperCase()}</div>
             </button>
           </div>
         );
@@ -826,7 +833,7 @@ function App() {
                     className="w-full btn-primary flex justify-center items-center gap-2"
                     style={{ backgroundColor: chatConfig.buttonColor }}
                 >
-                    <Plus size={18} /> Novo Agendamento
+                    <Plus size={18} /> {getMessage('newAppointment')}
                 </button>
             </div>
         );
@@ -842,8 +849,8 @@ function App() {
                         <div className="flex items-center gap-3">
                             <Bell size={18} />
                             <div className="text-left">
-                                <div className="font-bold text-sm">Ativar Notificações</div>
-                                <div className="text-[10px] opacity-90">Receba lembretes automáticos</div>
+                                <div className="font-bold text-sm">{getMessage('enableNotifications')}</div>
+                                <div className="text-[10px] opacity-90">{getMessage('notificationHint')}</div>
                             </div>
                         </div>
                         <div className="bg-white/20 p-1 rounded-lg">
@@ -857,7 +864,7 @@ function App() {
                     className="w-full btn-primary flex justify-center items-center gap-2"
                     style={{ backgroundColor: chatConfig.buttonColor }}
                 >
-                    <Plus size={18} /> Novo Agendamento
+                    <Plus size={18} /> {getMessage('newAppointment')}
                 </button>
             </div>
         );
@@ -872,7 +879,7 @@ function App() {
                                 <div className="text-sm text-slate-500">{appt.salonId.name}</div>
                             </div>
                             <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
-                                Agendado
+                                {getMessage('scheduledStatus')}
                             </div>
                         </div>
                         
@@ -917,7 +924,7 @@ function App() {
                             onClick={() => handleCancelAppointment(appt._id)}
                             className="w-full py-2 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
                         >
-                            <Trash2 size={16} /> Cancelar Agendamento
+                            <Trash2 size={16} /> {getMessage('cancelButton')}
                         </button>
                     </div>
                 ))}
@@ -928,21 +935,21 @@ function App() {
                         } else if (salons.length > 0) {
                             handleSalonSelect(booking.salon || salons[0], true);
                         } else {
-                            addMessage('Aguarde, carregando informações do estabelecimento...');
+                            addMessage(getMessage('loadingSalon'));
                             window.location.reload();
                         }
                     }}
                     className="w-full py-3 text-white rounded-lg font-medium hover:opacity-90 flex items-center justify-center gap-2 mb-2"
                     style={{ backgroundColor: chatConfig.buttonColor }}
                 >
-                    <Plus size={16} /> Novo Agendamento
+                    <Plus size={16} /> {getMessage('newAppointment')}
                 </button>
 
                 <button 
                     onClick={handleBack}
                     className="w-full py-3 text-slate-500 text-sm hover:underline"
                 >
-                    Voltar
+                    {getMessage('backButton')}
                 </button>
             </div>
         );
@@ -1019,7 +1026,7 @@ function App() {
 
       } catch (err) {
         console.error("Erro ao carregar inicial", err);
-        addMessage('Erro ao conectar com o servidor.');
+        addMessage(getMessage('connectionError'));
       } finally {
         setLoading(false);
       }
@@ -1041,6 +1048,10 @@ function App() {
       setStep('INIT');
       setCalendarLinks(null);
       
+      // Reset chat config to default/neutral to prevent profile bleeding
+      // It will be re-fetched/re-merged in runStartLogic if applicable
+      setChatConfig(prev => ({ ...prev, chat_profile: 'neutral' }));
+
       // Small delay to ensure state is cleared before logic runs (though React batches, it's safer to await or just run)
       // Actually, since state updates are async, we might want to run logic in a useEffect or just assume it will pick up.
       // But we need to make sure we don't use stale state in runStartLogic.
@@ -1135,7 +1146,7 @@ function App() {
           ) : (
             <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 text-gray-500">
                 {chatConfig.showAvatar && chatConfig.avatarUrl ? (
-                    <img src={chatConfig.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={chatConfig.avatarUrl} alt={getMessage('avatarAlt')} className="w-full h-full object-cover" />
                 ) : (
                     <Store size={20} />
                 )}
@@ -1145,7 +1156,7 @@ function App() {
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-lg truncate" style={{ color: chatConfig.headerTextColor }}>{chatConfig.assistantName}</h1>
             <p className="text-xs text-green-500 flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online agora
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> {getMessage('onlineStatus')}
             </p>
           </div>
           <div className="flex gap-2">
@@ -1155,7 +1166,7 @@ function App() {
                 title="Voltar ao Início"
             >
                 <History size={14} /> 
-                Início
+                {getMessage('homeButton')}
             </button>
             <button 
                 onClick={handleMyHistoryClick} 
@@ -1163,8 +1174,8 @@ function App() {
                 title="Ver meus agendamentos"
             >
                 <Calendar size={14} /> 
-                <span className="hidden sm:inline">Meus Agendamentos</span>
-                <span className="sm:hidden">Agenda</span>
+                <span className="hidden sm:inline">{getMessage('myAppointmentsButton')}</span>
+                <span className="sm:hidden">{getMessage('myAppointmentsShort')}</span>
             </button>
             {/* Admin button removed as per request */}
           </div>
@@ -1183,7 +1194,7 @@ function App() {
               {msg.sender === 'bot' && chatConfig.showAvatar && (
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                    {chatConfig.avatarUrl ? (
-                     <img src={chatConfig.avatarUrl} alt="Bot" className="w-full h-full object-cover" />
+                     <img src={chatConfig.avatarUrl} alt={getMessage('botAlt')} className="w-full h-full object-cover" />
                    ) : (
                      <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100">
                        <Store size={14} />
@@ -1205,7 +1216,7 @@ function App() {
                 {msg.type === 'image' ? (
                     <img 
                         src={msg.text} 
-                        alt="Meme" 
+                        alt={getMessage('memeAlt')} 
                         className="rounded-lg w-full h-auto object-cover max-w-[200px]" 
                         onError={(e) => e.target.style.display = 'none'}
                     />
@@ -1220,7 +1231,7 @@ function App() {
                {chatConfig.showAvatar && (
                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     {chatConfig.avatarUrl ? (
-                      <img src={chatConfig.avatarUrl} alt="Bot" className="w-full h-full object-cover" />
+                      <img src={chatConfig.avatarUrl} alt={getMessage('botAlt')} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100">
                         <Store size={14} />
@@ -1248,7 +1259,7 @@ function App() {
                 name="input"
                 type={step === 'IDENTIFY_PHONE' ? "tel" : "text"}
                 className="flex-1 bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-accent/50"
-                placeholder={step === 'IDENTIFY_PHONE' ? "Digite seu celular..." : "Digite seu nome..."}
+                placeholder={step === 'IDENTIFY_PHONE' ? getMessage('inputPhonePlaceholder') : getMessage('inputNamePlaceholder')}
                 autoFocus
               />
               <button type="submit" style={{ backgroundColor: chatConfig.buttonColor }} className="text-white p-3 rounded-xl hover:opacity-90 transition-opacity">

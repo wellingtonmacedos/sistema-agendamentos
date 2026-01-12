@@ -65,6 +65,17 @@ const ChatSettings = () => {
 
     if (loading) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
 
+    const isFeminine = config.chat_profile === 'feminine';
+
+    const getPreviewMessage = (key, ...args) => {
+        const profile = config.chat_profile || 'neutral';
+        const template = messageMap[key]?.[profile] || messageMap[key]?.['neutral'];
+        if (typeof template === 'function') {
+            return template(...args);
+        }
+        return template || key;
+    };
+
     return (
         <div className="p-6 max-w-6xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -383,70 +394,70 @@ const ChatSettings = () => {
                             </div>
                         </div>
 
-                        {/* Chat Body */}
-                        <div 
-                            className="flex-1 overflow-y-auto p-4 space-y-4"
-                            style={{ backgroundColor: config.backgroundColor }}
-                        >
-                            {/* Bot Message */}
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-opacity-50" style={{ backgroundColor: config.backgroundColor }}>
+                            {/* Bot Welcome */}
                             <div className="flex gap-2">
                                 {config.showAvatar && (
                                     <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 mt-1">
-                                        {config.avatarUrl ? (
+                                         {config.avatarUrl ? (
                                             <img src={config.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
-                                            <Bot className="w-5 h-5 m-1.5 text-gray-500" />
+                                            <Bot size={20} className="w-full h-full p-1.5 text-gray-500" />
                                         )}
                                     </div>
                                 )}
                                 <div 
-                                    className="p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm"
+                                    className={`p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tl-none' : ''}`}
                                     style={{ backgroundColor: config.botBubbleColor, color: config.botTextColor }}
                                 >
-                                    <p>Olá! Sou {config.assistantName}. Como posso ajudar você hoje?</p>
+                                    <p>{getPreviewMessage('previewWelcome', config.assistantName)}</p>
                                 </div>
                             </div>
 
                             {/* User Message */}
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-2">
                                 <div 
-                                    className="p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm"
+                                    className={`p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tr-none' : ''}`}
                                     style={{ backgroundColor: config.userBubbleColor, color: config.userTextColor }}
                                 >
-                                    <p>Gostaria de agendar um horário para corte de cabelo.</p>
+                                    <p>{getPreviewMessage('previewUserMessage')}</p>
+                                </div>
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <User size={16} className="text-blue-600" />
                                 </div>
                             </div>
 
-                            {/* Bot Response with Buttons */}
+                            {/* Bot Response */}
                             <div className="flex gap-2">
                                 {config.showAvatar && (
                                     <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 mt-1">
-                                        {config.avatarUrl ? (
+                                         {config.avatarUrl ? (
                                             <img src={config.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
-                                            <Bot className="w-5 h-5 m-1.5 text-gray-500" />
+                                            <Bot size={20} className="w-full h-full p-1.5 text-gray-500" />
                                         )}
                                     </div>
                                 )}
                                 <div className="space-y-2 max-w-[85%]">
                                     <div 
-                                        className="p-3 rounded-2xl rounded-tl-none text-sm shadow-sm"
+                                        className={`p-3 rounded-2xl rounded-tl-none text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tl-none' : ''}`}
                                         style={{ backgroundColor: config.botBubbleColor, color: config.botTextColor }}
                                     >
-                                        <p>Claro! Para qual serviço seria?</p>
+                                        <p>{getPreviewMessage('previewBotResponse')}</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         <button 
                                             className="px-4 py-2 rounded-full text-xs font-medium text-white shadow-sm transition-opacity hover:opacity-90"
                                             style={{ backgroundColor: config.buttonColor }}
                                         >
-                                            Corte Masculino
+                                            {getPreviewMessage('previewService1')}
                                         </button>
                                         <button 
                                             className="px-4 py-2 rounded-full text-xs font-medium text-white shadow-sm transition-opacity hover:opacity-90"
                                             style={{ backgroundColor: config.buttonColor }}
                                         >
-                                            Barba
+                                            {getPreviewMessage('previewService2')}
                                         </button>
                                     </div>
                                 </div>

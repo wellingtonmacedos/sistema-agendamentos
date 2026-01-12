@@ -24,13 +24,18 @@ exports.updateSalon = async (req, res) => {
              // Mongoose Map/Object handling can be tricky with partial updates depending on how it's sent
              // But since we are likely sending the whole object from frontend, direct assignment might be okay.
              // However, let's be safe and merge.
-             updates.chatConfig = { ...salon.chatConfig, ...updates.chatConfig };
+             const currentConfig = salon.chatConfig && typeof salon.chatConfig.toObject === 'function' 
+                ? salon.chatConfig.toObject() 
+                : salon.chatConfig || {};
+             
+             updates.chatConfig = { ...currentConfig, ...updates.chatConfig };
         }
     }
 
     const salon = await Salon.findByIdAndUpdate(req.user.salonId, updates, { new: true });
     res.json(salon);
   } catch (error) {
+    console.error("[updateSalon] Error:", error);
     res.status(400).json({ error: error.message });
   }
 };
