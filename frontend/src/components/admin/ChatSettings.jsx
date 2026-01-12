@@ -89,19 +89,6 @@ const ChatSettings = () => {
                                 className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tom de Voz</label>
-                            <select 
-                                name="assistantTone"
-                                value={config.assistantTone}
-                                onChange={handleChange}
-                                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                            >
-                                <option value="neutro">Neutro</option>
-                                <option value="formal">Formal</option>
-                                <option value="informal">Informal</option>
-                            </select>
-                        </div>
                     </div>
 
                     {/* Avatar */}
