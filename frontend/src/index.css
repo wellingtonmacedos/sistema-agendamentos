@@ -10,6 +10,9 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  .font-soft {
+    font-family: 'Quicksand', sans-serif;
+  }
 }
 
 :root {

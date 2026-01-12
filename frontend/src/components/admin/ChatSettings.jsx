@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Save, MessageSquare, User, Send, Bot } from 'lucide-react';
+import { messageMap } from '../../utils/messageMap';
 
 const ChatSettings = () => {
     const [config, setConfig] = useState({
@@ -311,7 +312,43 @@ const ChatSettings = () => {
                         </div>
                     </div>
 
-                    <div className="pt-6">
+                    {/* Chat Profile Selection */}
+                    <div className="space-y-4 pt-4 border-t">
+                        <h3 className="font-semibold text-gray-700">Perfil do Chatbot</h3>
+                        <p className="text-sm text-gray-500">Altera apenas a linguagem e o estilo visual do chatbot. Não interfere no funcionamento dos agendamentos.</p>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50">
+                                <input 
+                                    type="radio"
+                                    name="chat_profile"
+                                    value="neutral"
+                                    checked={config.chat_profile === 'neutral' || !config.chat_profile}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                    <span className="block text-sm font-medium text-gray-700">Neutro / Profissional</span>
+                                    <span className="block text-xs text-gray-500">Ideal para barbearias, salões masculinos e unissex.</span>
+                                </div>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50">
+                                <input 
+                                    type="radio"
+                                    name="chat_profile"
+                                    value="feminine"
+                                    checked={config.chat_profile === 'feminine'}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                    <span className="block text-sm font-medium text-gray-700">Feminino / Delicado</span>
+                                    <span className="block text-xs text-gray-500">Ideal para manicure, studio de cílios, estética e salões femininos.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t">
                         <button 
                             onClick={handleSave}
                             disabled={saving}
@@ -332,7 +369,7 @@ const ChatSettings = () => {
                 <div className="space-y-4">
                     <h3 className="font-semibold text-gray-700">Pré-visualização</h3>
                     
-                    <div className="bg-gray-100 rounded-[2rem] border-4 border-gray-800 p-4 h-[600px] w-full max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative">
+                    <div className={`bg-gray-100 rounded-[2.5rem] border-4 border-gray-800 p-4 h-[600px] w-full max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative ${isFeminine ? 'font-soft' : ''}`}>
                         {/* Fake Phone Header */}
                         <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800 w-1/2 mx-auto rounded-b-xl z-20"></div>
                         

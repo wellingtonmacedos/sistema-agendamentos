@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import { subscribeToPush, getPushPermissionState } from './utils/pushUtils';
+import { messageMap } from './utils/messageMap';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -112,8 +113,23 @@ function App() {
     avatarUrl: '',
     showAvatar: true,
     enableSuccessMeme: true,
-    successMemeUrl: 'https://media.tenor.com/8ZDLU43omvcAAAAM/kid-thumbs-up.gif'
+    successMemeUrl: 'https://media.tenor.com/8ZDLU43omvcAAAAM/kid-thumbs-up.gif',
+    chat_profile: 'neutral'
    });
+
+   const getMessage = (key, ...args) => {
+    const profile = chatConfig.chat_profile || 'neutral';
+    const template = messageMap[key]?.[profile] || messageMap[key]?.['neutral'];
+    if (typeof template === 'function') {
+        return template(...args);
+    }
+    return template || key;
+  };
+
+  const isFeminine = chatConfig.chat_profile === 'feminine';
+  const roundedClass = isFeminine ? 'rounded-3xl' : 'rounded-xl';
+  const buttonRoundedClass = isFeminine ? 'rounded-full' : 'rounded-lg';
+  const animClass = isFeminine ? 'hover:scale-[1.02] transition-transform duration-300' : 'hover:opacity-90 transition-opacity';
 
    useEffect(() => {
     const initApp = async () => {
@@ -199,7 +215,7 @@ function App() {
 
   const handleMyHistoryClick = async () => {
     if (!booking.clientPhone) {
-        addMessage('Por favor, identifique-se primeiro para ver seus agendamentos.', 'bot');
+        addMessage(getMessage('identifyFirst'), 'bot');
         goToStep('IDENTIFY_PHONE');
         return;
     }
@@ -209,8 +225,8 @@ function App() {
         const res = await axios.get(`/api/my-appointments?phone=${booking.clientPhone}`);
         setMyAppointments(res.data);
         if (res.data.length === 0) {
-            addMessage('Você não possui agendamentos ativos no momento.');
-            addMessage('Que tal realizar um novo agendamento? Confira as opções abaixo:');
+            addMessage(getMessage('myAppointmentsEmpty'));
+            addMessage(getMessage('newAppointmentPrompt'));
             // If we are not on the service list, try to go there
             if (step !== 'SERVICE' && salons.length > 0) {
                 if (services.length > 0) {
@@ -220,7 +236,7 @@ function App() {
                 }
             }
         } else {
-            addMessage(`Encontrei ${res.data.length} agendamento(s) ativo(s).`);
+            addMessage(getMessage('myAppointmentsFound', res.data.length));
             goToStep('MY_APPOINTMENTS');
         }
     } catch (err) {
@@ -231,7 +247,7 @@ function App() {
   };
 
   const handleCancelAppointment = async (apptId) => {
-    if (!window.confirm("Tem certeza que deseja cancelar este agendamento?")) return;
+    if (!window.confirm(getMessage('cancelConfirm'))) return;
     
     setLoading(true);
     try {
@@ -242,7 +258,7 @@ function App() {
         // Refresh
         const res = await axios.get(`/api/my-appointments?phone=${booking.clientPhone}`);
         setMyAppointments(res.data);
-        addMessage('Agendamento cancelado com sucesso.');
+        addMessage(getMessage('cancelSuccess'));
         
         if (res.data.length === 0) {
             handleBack(); 
@@ -274,15 +290,15 @@ function App() {
                 localStorage.setItem('customer_phone', val);
                 
                 setBooking(prev => ({ ...prev, clientName: res.data.name }));
-                addMessage(`Olá novamente, **${res.data.name}**! Que bom te ver.`);
+                addMessage(getMessage('welcomeBack', res.data.name));
                 loadSalons();
             } else {
-                addMessage('Certo. Como é a primeira vez, qual seu **Nome Completo**?');
+                addMessage(getMessage('askName'));
                 goToStep('IDENTIFY_NAME');
             }
         } catch (err) {
             // Fallback if backend fails or offline
-            addMessage('Obrigado. E qual é o seu **Nome Completo**?');
+            addMessage(getMessage('askNameFallback'));
             goToStep('IDENTIFY_NAME');
         } finally {
             setLoading(false);
@@ -292,7 +308,7 @@ function App() {
     else if (step === 'IDENTIFY_NAME') {
         addMessage(val, 'user');
         setBooking(prev => ({ ...prev, clientName: val }));
-        addMessage(`Prazer, ${val}!`);
+        addMessage(getMessage('niceToMeetYou', val));
         loadSalons();
     }
   };
@@ -311,7 +327,7 @@ function App() {
         if (res.data.length > 0) {
              handleSalonSelect(res.data[0], true);
         } else {
-             addMessage('Nenhum estabelecimento encontrado.');
+             addMessage(getMessage('noSalons'));
         }
     } catch (err) {
         addMessage('Erro ao carregar salões. Tente recarregar a página.');
@@ -338,7 +354,7 @@ function App() {
       // Professionals will be loaded after service selection
       setProfessionals([]);
       
-      addMessage(`Vamos agendar? Escolha o serviço que deseja:`);
+      addMessage(getMessage('chooseService'));
       goToStep('SERVICE');
     } catch (err) {
       addMessage('Erro ao carregar serviços.');
@@ -386,10 +402,10 @@ function App() {
         setProfessionals(res.data);
         
         if (res.data.length > 0) {
-            addMessage(`Você tem preferência por algum profissional?`);
+            addMessage(getMessage('chooseProfessional'));
             goToStep('PROFESSIONAL');
         } else {
-            addMessage('Não há profissionais disponíveis no momento.');
+            addMessage(getMessage('noProfessionals'));
         }
     } catch (err) {
         addMessage('Erro ao carregar profissionais.');
@@ -403,11 +419,11 @@ function App() {
         addMessage(prof.name, 'user');
         setBooking(prev => ({ ...prev, professional: prof }));
     } else {
-        addMessage('Sem preferência', 'user');
+        addMessage(getMessage('noPreference'), 'user');
         setBooking(prev => ({ ...prev, professional: professionals[0] }));
     }
     
-    addMessage('Entendido. Para qual dia você gostaria de verificar a disponibilidade?');
+    addMessage(getMessage('chooseDate'));
     goToStep('DATE');
   };
 
@@ -418,7 +434,7 @@ function App() {
     addMessage(formattedDate, 'user');
     setBooking(prev => ({ ...prev, date: dateStr }));
     
-    addMessage('Consultando agenda...', 'bot');
+    addMessage(getMessage('checkingSchedule'), 'bot');
     setLoading(true);
     
     try {
@@ -441,17 +457,17 @@ function App() {
 
       // Check for Arrival Order header
       if (res.headers['x-arrival-order'] === 'true') {
-        addMessage('Neste dia, o atendimento será realizado por ordem de chegada.');
-        addMessage('Deseja agendar para outra data?');
+        addMessage(getMessage('arrivalOrderWarning'));
+        addMessage(getMessage('chooseAnotherDate'));
         goToStep('ARRIVAL_WARNING');
         return;
       }
 
       if (res.data.length > 0) {
-        addMessage(`Encontrei estes horários para ${formattedDate}:`);
+        addMessage(getMessage('timeFound', formattedDate));
         goToStep('TIME');
       } else {
-        addMessage(`Não há horários livres para ${formattedDate}. Por favor, escolha outra data.`);
+        addMessage(getMessage('noSlots', formattedDate));
         goToStep('DATE');
       }
     } catch (err) {
@@ -466,14 +482,14 @@ function App() {
     addMessage(time, 'user');
     setBooking(prev => ({ ...prev, time }));
     
-    addMessage('Perfeito. Por favor, confira os dados do agendamento:');
+    addMessage(getMessage('confirmDetails'));
     goToStep('CONFIRM');
   };
 
   const [calendarLinks, setCalendarLinks] = useState(null);
 
   const handleConfirm = async () => {
-    addMessage('Confirmar', 'user');
+    addMessage(getMessage('confirmButton'), 'user');
     setLoading(true);
     try {
       const serviceIds = booking.selectedServices?.length > 0 
@@ -501,14 +517,15 @@ function App() {
         ? booking.selectedServices.map(s => s.name).join(', ')
         : booking.service.name;
 
-      addMessage(`Agendamento Confirmado! 🎉\n${serviceNames} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
+      const successMsg = getMessage('success');
+      addMessage(`${successMsg}\n${serviceNames} com ${booking.professional.name}\nDia ${format(parse(booking.date, 'yyyy-MM-dd', new Date()), 'dd/MM')} às ${booking.time}.`);
       
       if (chatConfig.enableSuccessMeme !== false) {
         const memeUrl = chatConfig.successMemeUrl || 'https://media.tenor.com/l5_u4JktKxYAAAAC/thumbs-up-computer.gif';
         addMessage(memeUrl, 'bot', 'image');
       }
 
-      addMessage('Deseja adicionar à sua agenda? Escolha uma opção abaixo:', 'bot');
+      addMessage(getMessage('addToCalendar'), 'bot');
       setStep('CALENDAR_DECISION');
     } catch (err) {
       addMessage('Ocorreu um erro ao finalizar. Tente novamente.');
@@ -560,7 +577,7 @@ function App() {
                     key={s._id} 
                     onClick={() => handleServiceToggle(s)} 
                     className={clsx(
-                      "flex-shrink-0 w-40 flex flex-col rounded-xl border transition-all snap-center overflow-hidden shadow-sm bg-white",
+                      `flex-shrink-0 w-40 flex flex-col ${roundedClass} border transition-all snap-center overflow-hidden shadow-sm bg-white ${animClass}`,
                       isSelected ? "ring-2 ring-offset-2" : "opacity-90 hover:opacity-100"
                     )}
                     style={{ 
@@ -655,7 +672,7 @@ function App() {
                     key={d.toString()} 
                     onClick={() => handleDateSelect(dateStr)}
                     className={clsx(
-                        "flex-shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border transition-all"
+                        `flex-shrink-0 w-16 h-20 ${roundedClass} flex flex-col items-center justify-center border transition-all ${animClass}`
                     )}
                     style={{
                         backgroundColor: isSelected ? chatConfig.buttonColor : '#fff',
@@ -743,10 +760,10 @@ function App() {
                 </div>
                 <button 
                     onClick={handleConfirm} 
-                    className="w-full btn-primary flex justify-center items-center gap-2"
+                    className={`w-full btn-primary flex justify-center items-center gap-2 ${buttonRoundedClass}`}
                     style={{ backgroundColor: chatConfig.buttonColor }}
                 >
-                    <CheckCircle size={18} /> Confirmar Agendamento
+                    <CheckCircle size={18} /> {getMessage('confirmButton')}
                 </button>
             </div>
         );
@@ -788,7 +805,7 @@ function App() {
                              href={calendarLinks.google} 
                              target="_blank" 
                              rel="noopener noreferrer"
-                             className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm"
+                             className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 ${roundedClass} bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm`}
                              style={{ borderColor: chatConfig.buttonColor, color: chatConfig.buttonColor }}
                          >
                              <Calendar size={18} /> Google
@@ -796,7 +813,7 @@ function App() {
                          <a 
                              href={calendarLinks.ics} 
                              download="agendamento.ics"
-                             className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm"
+                             className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 ${roundedClass} bg-white border hover:bg-slate-50 text-xs font-medium transition-colors text-center shadow-sm`}
                              style={{ borderColor: chatConfig.buttonColor, color: chatConfig.buttonColor }}
                          >
                              <Calendar size={18} /> Apple/Outros
@@ -819,7 +836,7 @@ function App() {
                 {notifPermission === 'default' && (
                     <button 
                         onClick={handleEnableNotifications}
-                        className="w-full p-3 rounded-xl shadow-sm flex items-center justify-between hover:opacity-90 transition-opacity"
+                        className={`w-full p-3 ${roundedClass} shadow-sm flex items-center justify-between hover:opacity-90 transition-opacity`}
                         style={{ backgroundColor: chatConfig.buttonColor, color: '#fff' }}
                     >
                         <div className="flex items-center gap-3">
@@ -848,7 +865,7 @@ function App() {
         return (
             <div className="space-y-3">
                 {myAppointments.map(appt => (
-                    <div key={appt._id} className="card bg-white border p-3 rounded-xl shadow-sm">
+                    <div key={appt._id} className={`card bg-white border p-3 ${roundedClass} shadow-sm`}>
                         <div className="flex justify-between items-start mb-2">
                             <div>
                                 <div className="font-bold text-slate-800">{appt.services.map(s => s.name).join(', ')}</div>
@@ -976,7 +993,7 @@ function App() {
                 if (res.data.found) {
                     customerFound = true;
                     setBooking(prev => ({ ...prev, clientPhone: cachedPhone, clientName: res.data.name }));
-                    addMessage(`Olá novamente, **${res.data.name}**! 👋 (Reconhecido pelo seu dispositivo)`);
+                    addMessage(getMessage('welcomeBackDevice', res.data.name));
                     
                     // Skip to Salon selection
                     if (loadedSalons.length > 0) {
@@ -984,10 +1001,10 @@ function App() {
                             handleSalonSelect(loadedSalons[0], true);
                         } else {
                             setStep('SALON');
-                            addMessage('Selecione o estabelecimento:');
+                            addMessage(getMessage('chooseSalon'));
                         }
                     } else {
-                        addMessage('Nenhum estabelecimento encontrado.');
+                        addMessage(getMessage('noSalons'));
                     }
                 }
             } catch (e) {
@@ -996,7 +1013,7 @@ function App() {
         }
 
         if (!customerFound) {
-            addMessage('Olá! Sou seu assistente de agendamentos. 🤖\n\nAntes de começarmos, por favor, me informe seu **número de celular** (com DDD).');
+            addMessage(getMessage('welcomeInitial'));
             setStep('IDENTIFY_PHONE');
         }
 
@@ -1105,7 +1122,7 @@ function App() {
 
   return (
     <div className="bg-slate-50 min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[80vh]">
+      <div className={clsx("w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[80vh]", isFeminine && "font-soft")}>
         {/* Header */}
         <div 
             className="border-b p-4 flex items-center gap-3 sticky top-0 z-10"

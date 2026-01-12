@@ -55,6 +55,7 @@ const salonSchema = new mongoose.Schema({
     headerTextColor: { type: String, default: '#1F2937' }, // Gray-800
     assistantName: { type: String, default: 'Assistente' },
     assistantTone: { type: String, enum: ['formal', 'neutro', 'informal'], default: 'neutro' },
+    chat_profile: { type: String, enum: ['neutral', 'feminine'], default: 'neutral' },
     avatarUrl: { type: String, default: '' },
     showAvatar: { type: Boolean, default: true },
     enableSuccessMeme: { type: Boolean, default: true },
