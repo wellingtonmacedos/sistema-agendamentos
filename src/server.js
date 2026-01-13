@@ -85,8 +85,8 @@ app.get('*', async (req, res) => {
                     // Dynamic Values
                     const title = `${salon.name} - Reservo - Agenda Inteligente`;
                     const description = `Agende seu horário online no ${salon.name}. Rápido, fácil e prático.`;
-                    // Prioritize avatar, then logo, then default
-                    const image = salon.chatConfig?.avatarUrl || salon.logo || `https://${req.get('host')}/Reservo-icon.png`; 
+                    // Prioritize logo, then default icon. Removed chatConfig.avatarUrl as it's not suitable for sharing card.
+                    const image = salon.logo || `https://${req.get('host')}/Reservo-icon.png?v=2`; 
                     
                     // Replace Title
                     html = html.replace(
