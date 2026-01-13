@@ -86,7 +86,7 @@ app.get('*', async (req, res) => {
                     const title = `${salon.name} - Reservo - Agenda Inteligente`;
                     const description = `Agende seu horário online no ${salon.name}. Rápido, fácil e prático.`;
                     // Prioritize avatar, then logo, then default
-                    const image = salon.chatConfig?.avatarUrl || salon.logo || 'https://app.cwcompany.com.br/favicon.svg'; 
+                    const image = salon.chatConfig?.avatarUrl || salon.logo || `https://${req.get('host')}/Reservo-icon.png`; 
                     
                     // Replace Title
                     html = html.replace(
