@@ -15,7 +15,7 @@ export default defineConfig({
         enabled: true,
         type: 'module',
       },
-      includeAssets: ['favicon.svg', 'ringtone.mp3'],
+      includeAssets: ['Reservo-icon.png', 'ringtone.mp3'],
       manifest: {
         name: 'Sistema de Agendamentos',
         short_name: 'Agendamentos',
@@ -25,9 +25,9 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: '/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml'
+            src: '/Reservo-icon.png',
+            sizes: '512x512',
+            type: 'image/png'
           }
         ]
       }
