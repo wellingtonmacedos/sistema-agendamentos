@@ -310,11 +310,11 @@ const Settings = () => {
                             <div className="flex gap-2">
                                 <input 
                                     readOnly
-                                    value={salon?.chatbotLink || ''}
+                                    value={salon?.slug ? `https://reservo.app.br/chat/${salon.slug}` : ''}
                                     className="flex-1 rounded-md border-blue-200 bg-white p-2 text-sm text-gray-600"
                                 />
                                 <button 
-                                    onClick={() => copyToClipboard(salon?.chatbotLink)}
+                                    onClick={() => salon?.slug && copyToClipboard(`https://reservo.app.br/chat/${salon.slug}`)}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2 transition-colors"
                                 >
                                     <Copy size={16} />

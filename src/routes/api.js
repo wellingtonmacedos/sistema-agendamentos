@@ -81,7 +81,7 @@ router.get('/me', authMiddleware, async (req, res) => {
             settings: salon.settings,
             chatConfig: salon.chatConfig,
             slug: salon.slug,
-            chatbotLink: salon.chatbotLink
+            chatbotLink: salon.chatbotLink // This is a virtual, accessed directly from document instance
         });
     } catch (error) {
         console.error(error);

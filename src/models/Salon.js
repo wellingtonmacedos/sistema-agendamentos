@@ -115,7 +115,7 @@ salonSchema.pre('save', async function(next) {
 // Virtual for chatbot link
 salonSchema.virtual('chatbotLink').get(function() {
   if (!this.slug) return null;
-  // Use env var or default to production domain
+  // Use environment variable or default to production domain
   const baseUrl = process.env.FRONTEND_URL || 'https://reservo.app.br';
   return `${baseUrl}/chat/${this.slug}`;
 });

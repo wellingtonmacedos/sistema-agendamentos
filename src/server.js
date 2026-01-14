@@ -123,9 +123,12 @@ app.get('*', async (req, res) => {
     res.sendFile(filePath);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
-console.log('Attempting to start server on port', PORT);
-app.listen(PORT, () => {
+console.log('--- ENV DEBUG ---');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('-----------------');
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

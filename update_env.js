@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const envPath = path.join(__dirname, '.env');
-const frontendUrl = 'https://app.cwcompany.com.br';
+const frontendUrl = 'https://reservo.app.br';
 
 try {
     let envContent = '';
