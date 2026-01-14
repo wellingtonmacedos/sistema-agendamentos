@@ -303,7 +303,7 @@ const Settings = () => {
 
                         {/* Chatbot Link Section */}
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <h3 className="text-sm font-medium text-blue-800 mb-2">Link do Chatbot (Público)</h3>
+                            <h3 className="text-sm font-medium text-blue-800 mb-2">Link do Chatbot (Público) - Atualizado</h3>
                             <p className="text-xs text-blue-600 mb-3">
                                 Este é o link único do seu estabelecimento. Compartilhe com seus clientes para que eles possam realizar agendamentos.
                             </p>
