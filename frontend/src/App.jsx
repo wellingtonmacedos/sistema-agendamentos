@@ -224,8 +224,9 @@ function App() {
     setLoading(true);
     try {
         const res = await axios.get(`/api/my-appointments?phone=${booking.clientPhone}`);
-        setMyAppointments(res.data);
-        if (res.data.length === 0) {
+        const activeAppointments = (res.data || []).filter(a => a.status !== 'completed' && a.status !== 'cancelled');
+        setMyAppointments(activeAppointments);
+        if (activeAppointments.length === 0) {
             addMessage(getMessage('myAppointmentsEmpty'));
             addMessage(getMessage('newAppointmentPrompt'));
             // If we are not on the service list, try to go there
@@ -237,7 +238,7 @@ function App() {
                 }
             }
         } else {
-            addMessage(getMessage('myAppointmentsFound', res.data.length));
+            addMessage(getMessage('myAppointmentsFound', activeAppointments.length));
             goToStep('MY_APPOINTMENTS');
         }
     } catch (err) {
@@ -253,16 +254,19 @@ function App() {
     setLoading(true);
     try {
         await axios.delete(`/api/my-appointments/${apptId}`, {
-            data: { phone: booking.clientPhone } // Axios delete body requires 'data' key
+            data: { phone: booking.clientPhone }
         });
-        
-        // Refresh
-        const res = await axios.get(`/api/my-appointments?phone=${booking.clientPhone}`);
-        setMyAppointments(res.data);
+
+        setMyAppointments(prev => prev.filter(a => a._id !== apptId));
         addMessage(getMessage('cancelSuccess'));
-        
-        if (res.data.length === 0) {
-            handleBack(); 
+
+        try {
+            const res = await axios.get(`/api/my-appointments?phone=${booking.clientPhone}`);
+            setMyAppointments(res.data);
+            if (res.data.length === 0) {
+                handleBack();
+            }
+        } catch (refreshError) {
         }
     } catch (err) {
         addMessage(getMessage('errorCancellingAppointment'));
@@ -871,7 +875,7 @@ function App() {
       case 'MY_APPOINTMENTS':
         return (
             <div className="space-y-3">
-                {myAppointments.map(appt => (
+                {myAppointments.filter(appt => appt.status !== 'completed' && appt.status !== 'cancelled').map(appt => (
                     <div key={appt._id} className={`card bg-white border p-3 ${roundedClass} shadow-sm`}>
                         <div className="flex justify-between items-start mb-2">
                             <div>

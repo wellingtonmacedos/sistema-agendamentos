@@ -68,7 +68,8 @@ const Settings = () => {
                 name: data.name,
                 phone: data.phone,
                 address: data.address,
-                cancellationPolicy: data.cancellationPolicy
+                cancellationPolicy: data.cancellationPolicy,
+                email: data.email
             });
             // Initialize working hours with defaults if empty
             const defaultHours = {};

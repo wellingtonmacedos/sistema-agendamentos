@@ -6,6 +6,7 @@
 // - WhatsApp: Twilio, WPPConnect, or Meta API
 
 const webpush = require('web-push');
+const nodemailer = require('nodemailer');
 const PushSubscription = require('../models/PushSubscription');
 const User = require('../models/User');
 const Salon = require('../models/Salon');
@@ -20,14 +21,42 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     );
 }
 
+let emailTransport = null;
+
+if (process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    emailTransport = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT),
+        secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
+}
+
 const sendEmail = async (to, subject, html) => {
-    // In production, integrate with SES/SendGrid/Nodemailer
-    // For now, we just log to simulate sending
-    console.log(`[EMAIL SIMULATION] ---------------------------------------------------`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${html.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, "")}`);
-    console.log(`----------------------------------------------------------------------`);
+    if (!to) return false;
+
+    if (!emailTransport) {
+        console.log(`[EMAIL SIMULATION] ---------------------------------------------------`);
+        console.log(`To: ${to}`);
+        console.log(`Subject: ${subject}`);
+        console.log(`Body: ${html.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, "")}`);
+        console.log(`----------------------------------------------------------------------`);
+        return true;
+    }
+
+    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    await emailTransport.sendMail({
+        from,
+        to,
+        subject,
+        html
+    });
+
+    console.log(`[EMAIL] Enviado para ${to}`);
     return true;
 };
 

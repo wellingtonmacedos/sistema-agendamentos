@@ -63,12 +63,10 @@ router.post('/public/push/subscribe', pushController.publicSubscribe);
 router.get('/me', authMiddleware, async (req, res) => {
     try {
         const Salon = require('../models/Salon');
-        // Use req.user.salonId to get establishment data
         const salon = await Salon.findById(req.user.salonId);
 
         if (!salon) return res.status(404).json({ error: 'Salão não encontrado' });
         
-        // Return safe data
         res.json({
             id: salon._id,
             userId: req.user.id,
@@ -77,11 +75,15 @@ router.get('/me', authMiddleware, async (req, res) => {
             email: salon.email,
             userEmail: req.user.email,
             role: req.user.role,
+            phone: salon.phone,
+            address: salon.address,
+            cancellationPolicy: salon.cancellationPolicy,
             workingHours: salon.workingHours,
             settings: salon.settings,
+            emailSettings: salon.emailSettings,
             chatConfig: salon.chatConfig,
             slug: salon.slug,
-            chatbotLink: salon.chatbotLink // This is a virtual, accessed directly from document instance
+            chatbotLink: salon.chatbotLink
         });
     } catch (error) {
         console.error(error);

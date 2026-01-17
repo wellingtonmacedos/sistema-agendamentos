@@ -184,12 +184,13 @@ const getMyAppointments = async (req, res) => {
         console.log("DEBUG - Todos agendamentos no banco:", JSON.stringify(allAppts, null, 2));
 
         // Fix: Field in Appointment model is 'customerPhone', not 'telefone'
+        // Only return active appointments (ignore completed and cancelled)
         const appointments = await require('../models/Appointment').find({
             $or: [
                 { customerPhone: phone },
                 { customerPhone: cleanPhone }
             ],
-            status: { $ne: 'completed' }, // Only active appointments
+            status: { $nin: ['completed', 'cancelled'] },
         })
         .populate('services', 'name price duration')
         .populate('professionalId', 'name')
