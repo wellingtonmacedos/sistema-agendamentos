@@ -44,6 +44,11 @@ const salonSchema = new mongoose.Schema({
     minNoticeMinutes: { type: Number, default: 60 }, // Minimum notice
     maxFutureDays: { type: Number, default: 30 },    // How far in future
   },
+  emailSettings: {
+    notifyOnNewAppointment: { type: Boolean, default: true },
+    notifyOnCancellation: { type: Boolean, default: true },
+    notifyProfessional: { type: Boolean, default: false }
+  },
   chatConfig: {
     botBubbleColor: { type: String, default: '#F3F4F6' }, // Gray-100
     botTextColor: { type: String, default: '#1F2937' },   // Gray-800

@@ -16,6 +16,11 @@ const Settings = () => {
     const [formData, setFormData] = useState({});
     const [workingHours, setWorkingHours] = useState({});
     const [agendaSettings, setAgendaSettings] = useState({});
+    const [emailSettings, setEmailSettings] = useState({
+        notifyOnNewAppointment: true,
+        notifyOnCancellation: true,
+        notifyProfessional: false
+    });
     
     // Blocks State
     const [blocks, setBlocks] = useState([]);
@@ -85,6 +90,14 @@ const Settings = () => {
                 maxFutureDays: data.settings?.maxFutureDays || 30
             });
 
+            if (data.emailSettings) {
+                setEmailSettings({
+                    notifyOnNewAppointment: data.emailSettings.notifyOnNewAppointment ?? true,
+                    notifyOnCancellation: data.emailSettings.notifyOnCancellation ?? true,
+                    notifyProfessional: data.emailSettings.notifyProfessional ?? false
+                });
+            }
+
         } catch (error) {
             console.error("Erro ao carregar configurações", error);
         } finally {
@@ -106,7 +119,8 @@ const Settings = () => {
             const payload = {
                 ...formData,
                 workingHours,
-                settings: agendaSettings
+                settings: agendaSettings,
+                emailSettings
             };
             
             const res = await axios.put('/api/salon', payload);
@@ -213,6 +227,71 @@ const Settings = () => {
                 {/* NOTIFICATIONS TAB */}
                 {activeTab === 'notifications' && (
                     <div className="space-y-6">
+                        
+                        {/* Email Notifications */}
+                        <div className="bg-white p-4 border rounded-lg">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <span role="img" aria-label="email">📧</span> Notificações por Email
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-medium text-gray-900">Novo Agendamento</h4>
+                                        <p className="text-sm text-gray-500">Receber email quando um novo agendamento for criado.</p>
+                                    </div>
+                                    <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={emailSettings.notifyOnNewAppointment}
+                                            onChange={e => setEmailSettings({...emailSettings, notifyOnNewAppointment: e.target.checked})}
+                                            className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                            style={{ right: emailSettings.notifyOnNewAppointment ? '0' : 'auto', left: emailSettings.notifyOnNewAppointment ? 'auto' : '0' }}
+                                        />
+                                        <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.notifyOnNewAppointment ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-medium text-gray-900">Cancelamento</h4>
+                                        <p className="text-sm text-gray-500">Receber email quando um agendamento for cancelado.</p>
+                                    </div>
+                                    <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={emailSettings.notifyOnCancellation}
+                                            onChange={e => setEmailSettings({...emailSettings, notifyOnCancellation: e.target.checked})}
+                                            className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                            style={{ right: emailSettings.notifyOnCancellation ? '0' : 'auto', left: emailSettings.notifyOnCancellation ? 'auto' : '0' }}
+                                        />
+                                        <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.notifyOnCancellation ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between border-t pt-4 mt-2">
+                                    <div>
+                                        <h4 className="font-medium text-gray-900">Notificar Profissional</h4>
+                                        <p className="text-sm text-gray-500">Enviar email também para o profissional responsável.</p>
+                                    </div>
+                                    <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={emailSettings.notifyProfessional}
+                                            onChange={e => setEmailSettings({...emailSettings, notifyProfessional: e.target.checked})}
+                                            className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                            style={{ right: emailSettings.notifyProfessional ? '0' : 'auto', left: emailSettings.notifyProfessional ? 'auto' : '0' }}
+                                        />
+                                        <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.notifyProfessional ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded text-sm text-gray-600 mt-2">
+                                    <p><strong>Email do Estabelecimento:</strong> {formData.email || 'Não configurado'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr className="border-gray-200" />
+
                         <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
                             <Bell className="w-5 h-5" /> Notificações Push
                         </h3>

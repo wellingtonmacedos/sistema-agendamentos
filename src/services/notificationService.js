@@ -8,6 +8,8 @@
 const webpush = require('web-push');
 const PushSubscription = require('../models/PushSubscription');
 const User = require('../models/User');
+const Salon = require('../models/Salon');
+const Professional = require('../models/Professional');
 
 // Configure Web Push
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -18,10 +20,85 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     );
 }
 
-const sendEmail = async (to, subject, text) => {
-    // Placeholder for email sending logic
-    console.log(`[EMAIL MOCK] To: ${to} | Subject: ${subject} | Body: ${text}`);
+const sendEmail = async (to, subject, html) => {
+    // In production, integrate with SES/SendGrid/Nodemailer
+    // For now, we just log to simulate sending
+    console.log(`[EMAIL SIMULATION] ---------------------------------------------------`);
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body: ${html.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, "")}`);
+    console.log(`----------------------------------------------------------------------`);
     return true;
+};
+
+const sendEmailNotification = async (appointment, type = 'NEW') => {
+    try {
+        const { salonId, professionalId, customerName, customerPhone, date, startTime, services } = appointment;
+        
+        // Fetch Salon Settings and Professional
+        const salon = await Salon.findById(salonId);
+        if (!salon) return;
+
+        // Check Settings
+        const settings = salon.emailSettings || {};
+        const shouldNotify = type === 'NEW' 
+            ? settings.notifyOnNewAppointment !== false // Default true
+            : settings.notifyOnCancellation !== false; // Default true
+
+        if (!shouldNotify) return;
+
+        // Prepare Email Content
+        const dateStr = new Date(date).toLocaleDateString('pt-BR');
+        // startTime is Date object in model, but sometimes string in flow? 
+        // Model says Date, let's format it.
+        const timeStr = new Date(startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const serviceNames = services.map(s => s.name).join(', ');
+        
+        let professionalName = 'Não atribuído';
+        let professionalEmail = null;
+
+        if (professionalId) {
+            const professional = await Professional.findById(professionalId);
+            if (professional) {
+                professionalName = professional.name;
+                professionalEmail = professional.email; // Assuming Professional has email
+            }
+        }
+
+        const subjectPrefix = type === 'NEW' ? 'Novo agendamento recebido' : 'Agendamento cancelado';
+        const subject = `${subjectPrefix} – ${customerName}`;
+
+        const html = `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+                <h2>${salon.name}</h2>
+                <h3 style="color: ${type === 'NEW' ? '#10B981' : '#EF4444'};">
+                    ${subjectPrefix}
+                </h3>
+                <p><strong>Cliente:</strong> ${customerName}</p>
+                <p><strong>Telefone:</strong> ${customerPhone}</p>
+                <p><strong>Data:</strong> ${dateStr}</p>
+                <p><strong>Horário:</strong> ${timeStr}</p>
+                <p><strong>Serviço(s):</strong> ${serviceNames}</p>
+                <p><strong>Profissional:</strong> ${professionalName}</p>
+                <br/>
+                <p><small>Este é um email automático do Sistema de Agendamentos.</small></p>
+            </div>
+        `;
+
+        // 1. Send to Salon Admin
+        if (salon.email) {
+            await sendEmail(salon.email, subject, html);
+        }
+
+        // 2. Send to Professional (Optional)
+        if (settings.notifyProfessional && professionalEmail) {
+            await sendEmail(professionalEmail, subject, html);
+        }
+
+    } catch (error) {
+        console.error('Erro ao enviar email de notificação:', error);
+    }
 };
 
 const sendWhatsApp = async (phone, message) => {
@@ -188,5 +265,6 @@ module.exports = {
     sendWhatsApp,
     sendEmail,
     sendPushToAdmins,
-    sendPushToClient
+    sendPushToClient,
+    sendEmailNotification
 };

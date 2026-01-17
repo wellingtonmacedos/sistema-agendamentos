@@ -1,6 +1,6 @@
 const availabilityService = require('../services/availabilityService');
 const appointmentService = require('../services/appointmentService');
-const { sendAppointmentConfirmation, sendPushToAdmins, sendPushToClient } = require('../services/notificationService');
+const { sendAppointmentConfirmation, sendPushToAdmins, sendPushToClient, sendEmailNotification } = require('../services/notificationService');
 
 const { generateGoogleCalendarUrl, generateICSContent } = require('../utils/calendarUtils');
 
@@ -84,6 +84,7 @@ const createAppointment = async (req, res) => {
         });
         sendAppointmentConfirmation(result).catch(console.error);
         sendPushToAdmins(result).catch(console.error);
+        sendEmailNotification(result).catch(console.error);
     }
 
     // Prepare Calendar Links (only for single or first of recurrence)
@@ -233,11 +234,16 @@ const cancelAppointment = async (req, res) => {
             return res.status(400).json({ error: 'Não é possível cancelar um agendamento já realizado' });
         }
 
-        await Appointment.findByIdAndDelete(id);
+        appointment.status = 'cancelled';
+        await appointment.save();
+
+        // Notify Admins
+        sendPushToAdmins(appointment, 'CANCEL').catch(console.error);
+        sendEmailNotification(appointment, 'CANCEL').catch(console.error);
         
-        // Ideally we should notify the professional/salon here.
-        // But for now, just delete.
-        
+        // Notify Client
+        sendPushToClient(appointment, 'CANCEL').catch(console.error);
+
         res.json({ success: true, message: 'Agendamento cancelado com sucesso' });
 
     } catch (error) {
