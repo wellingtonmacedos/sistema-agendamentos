@@ -227,7 +227,7 @@ const Services = () => {
                                     image={imageSrc}
                                     crop={crop}
                                     zoom={zoom}
-                                    aspect={16 / 9} // Service cards are usually landscape
+                                    aspect={1} // Square crop for better display
                                     onCropChange={setCrop}
                                     onCropComplete={onCropComplete}
                                     onZoomChange={setZoom}
