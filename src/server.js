@@ -2,11 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const dotenv = require('dotenv');
+
+dotenv.config();
+
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api');
 const Salon = require('./models/Salon');
-
-dotenv.config();
 
 const app = express();
 const path = require('path');
