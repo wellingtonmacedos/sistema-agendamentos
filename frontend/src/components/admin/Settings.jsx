@@ -19,6 +19,9 @@ const Settings = () => {
     const [emailSettings, setEmailSettings] = useState({
         notifyOnNewAppointment: true,
         notifyOnCancellation: true,
+        professionalNotifyOnNewAppointment: true,
+        professionalNotifyOnCancellation: false,
+        professionalNotifyOnReschedule: false,
         notifyProfessional: false
     });
     
@@ -95,7 +98,10 @@ const Settings = () => {
                 setEmailSettings({
                     notifyOnNewAppointment: data.emailSettings.notifyOnNewAppointment ?? true,
                     notifyOnCancellation: data.emailSettings.notifyOnCancellation ?? true,
-                    notifyProfessional: data.emailSettings.notifyProfessional ?? false
+                    professionalNotifyOnNewAppointment: data.emailSettings.professionalNotifyOnNewAppointment ?? data.emailSettings.notifyProfessional ?? true,
+                    professionalNotifyOnCancellation: data.emailSettings.professionalNotifyOnCancellation ?? false,
+                    professionalNotifyOnReschedule: data.emailSettings.professionalNotifyOnReschedule ?? false,
+                    notifyProfessional: data.emailSettings.notifyProfessional ?? (data.emailSettings.professionalNotifyOnNewAppointment ?? true)
                 });
             }
 
@@ -117,11 +123,15 @@ const Settings = () => {
 
     const handleSave = async () => {
         try {
+            const emailSettingsPayload = {
+                ...emailSettings,
+                notifyProfessional: emailSettings.professionalNotifyOnNewAppointment
+            };
             const payload = {
                 ...formData,
                 workingHours,
                 settings: agendaSettings,
-                emailSettings
+                emailSettings: emailSettingsPayload
             };
             
             const res = await axios.put('/api/salon', payload);
@@ -269,24 +279,67 @@ const Settings = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between border-t pt-4 mt-2">
-                                    <div>
-                                        <h4 className="font-medium text-gray-900">Notificar Profissional</h4>
-                                        <p className="text-sm text-gray-500">Enviar email também para o profissional responsável.</p>
-                                    </div>
-                                    <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={emailSettings.notifyProfessional}
-                                            onChange={e => setEmailSettings({...emailSettings, notifyProfessional: e.target.checked})}
-                                            className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
-                                            style={{ right: emailSettings.notifyProfessional ? '0' : 'auto', left: emailSettings.notifyProfessional ? 'auto' : '0' }}
-                                        />
-                                        <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.notifyProfessional ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                <div className="border-t pt-4 mt-2">
+                                    <h4 className="font-medium text-gray-900 mb-3">Notificações para Profissionais</h4>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h5 className="font-medium text-gray-900">Enviar email ao profissional quando receber novo agendamento</h5>
+                                                <p className="text-sm text-gray-500">Notifica o profissional responsável pelo atendimento.</p>
+                                            </div>
+                                            <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={emailSettings.professionalNotifyOnNewAppointment}
+                                                    onChange={e => setEmailSettings({...emailSettings, professionalNotifyOnNewAppointment: e.target.checked})}
+                                                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                                    style={{ right: emailSettings.professionalNotifyOnNewAppointment ? '0' : 'auto', left: emailSettings.professionalNotifyOnNewAppointment ? 'auto' : '0' }}
+                                                />
+                                                <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.professionalNotifyOnNewAppointment ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h5 className="font-medium text-gray-900">Enviar email ao profissional em caso de cancelamento</h5>
+                                                <p className="text-sm text-gray-500">Compatível para uso futuro (quando ativado).</p>
+                                            </div>
+                                            <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={emailSettings.professionalNotifyOnCancellation}
+                                                    onChange={e => setEmailSettings({...emailSettings, professionalNotifyOnCancellation: e.target.checked})}
+                                                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                                    style={{ right: emailSettings.professionalNotifyOnCancellation ? '0' : 'auto', left: emailSettings.professionalNotifyOnCancellation ? 'auto' : '0' }}
+                                                />
+                                                <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.professionalNotifyOnCancellation ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h5 className="font-medium text-gray-900">Enviar email ao profissional em caso de reagendamento</h5>
+                                                <p className="text-sm text-gray-500">Compatível para uso futuro (quando ativado).</p>
+                                            </div>
+                                            <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={emailSettings.professionalNotifyOnReschedule}
+                                                    onChange={e => setEmailSettings({...emailSettings, professionalNotifyOnReschedule: e.target.checked})}
+                                                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-blue-600"
+                                                    style={{ right: emailSettings.professionalNotifyOnReschedule ? '0' : 'auto', left: emailSettings.professionalNotifyOnReschedule ? 'auto' : '0' }}
+                                                />
+                                                <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${emailSettings.professionalNotifyOnReschedule ? 'bg-blue-600' : 'bg-gray-300'}`}></label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="bg-gray-50 p-3 rounded text-sm text-gray-600 mt-2">
-                                    <p><strong>Email do Estabelecimento:</strong> {formData.email || 'Não configurado'}</p>
+
+                                <div className="bg-gray-50 p-3 rounded text-sm text-gray-600 mt-4">
+                                    <div>
+                                        <p><strong>Email do Estabelecimento:</strong> {formData.email || 'Não configurado'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

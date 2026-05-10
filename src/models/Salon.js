@@ -47,7 +47,10 @@ const salonSchema = new mongoose.Schema({
   emailSettings: {
     notifyOnNewAppointment: { type: Boolean, default: true },
     notifyOnCancellation: { type: Boolean, default: true },
-    notifyProfessional: { type: Boolean, default: false }
+    notifyProfessional: { type: Boolean, default: false },
+    professionalNotifyOnNewAppointment: { type: Boolean, default: true },
+    professionalNotifyOnCancellation: { type: Boolean, default: false },
+    professionalNotifyOnReschedule: { type: Boolean, default: false }
   },
   chatConfig: {
     botBubbleColor: { type: String, default: '#F3F4F6' }, // Gray-100

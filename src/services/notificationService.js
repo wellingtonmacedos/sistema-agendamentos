@@ -60,68 +60,96 @@ const sendEmail = async (to, subject, html) => {
     return true;
 };
 
+const isValidEmail = (email) => {
+    if (!email || typeof email !== 'string') return false;
+    const value = email.trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+};
+
 const sendEmailNotification = async (appointment, type = 'NEW') => {
     try {
         const { salonId, professionalId, customerName, customerPhone, date, startTime, services } = appointment;
         
-        // Fetch Salon Settings and Professional
         const salon = await Salon.findById(salonId);
         if (!salon) return;
 
-        // Check Settings
         const settings = salon.emailSettings || {};
-        const shouldNotify = type === 'NEW' 
-            ? settings.notifyOnNewAppointment !== false // Default true
-            : settings.notifyOnCancellation !== false; // Default true
+        const adminShouldNotify = type === 'NEW'
+            ? settings.notifyOnNewAppointment !== false
+            : type === 'CANCEL'
+                ? settings.notifyOnCancellation !== false
+                : false;
 
-        if (!shouldNotify) return;
+        const professionalShouldNotify = type === 'NEW'
+            ? (settings.professionalNotifyOnNewAppointment ?? settings.notifyProfessional ?? true) !== false
+            : type === 'CANCEL'
+                ? (settings.professionalNotifyOnCancellation ?? false) === true
+                : type === 'RESCHEDULE'
+                    ? (settings.professionalNotifyOnReschedule ?? false) === true
+                    : false;
 
-        // Prepare Email Content
         const dateStr = new Date(date).toLocaleDateString('pt-BR');
-        // startTime is Date object in model, but sometimes string in flow? 
-        // Model says Date, let's format it.
         const timeStr = new Date(startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         
-        const serviceNames = services.map(s => s.name).join(', ');
+        const serviceNames = Array.isArray(services) ? services.map(s => s?.name).filter(Boolean).join(', ') : '';
         
         let professionalName = 'Não atribuído';
         let professionalEmail = null;
+        let professionalOkForSalon = false;
 
-        if (professionalId) {
+        if (professionalId && professionalShouldNotify) {
             const professional = await Professional.findById(professionalId);
             if (professional) {
                 professionalName = professional.name;
-                professionalEmail = professional.email; // Assuming Professional has email
+                professionalEmail = professional.email;
+                professionalOkForSalon = String(professional.salonId) === String(salon._id);
             }
         }
 
-        const subjectPrefix = type === 'NEW' ? 'Novo agendamento recebido' : 'Agendamento cancelado';
-        const subject = `${subjectPrefix} – ${customerName}`;
+        const subjectPrefix = type === 'NEW'
+            ? 'Novo atendimento agendado'
+            : type === 'CANCEL'
+                ? 'Atendimento cancelado'
+                : type === 'RESCHEDULE'
+                    ? 'Atendimento reagendado'
+                    : 'Atualização de atendimento';
+
+        const subject = `${subjectPrefix} – ${dateStr} ${timeStr}`;
 
         const html = `
             <div style="font-family: Arial, sans-serif; color: #333;">
-                <h2>${salon.name}</h2>
-                <h3 style="color: ${type === 'NEW' ? '#10B981' : '#EF4444'};">
-                    ${subjectPrefix}
-                </h3>
-                <p><strong>Cliente:</strong> ${customerName}</p>
-                <p><strong>Telefone:</strong> ${customerPhone}</p>
-                <p><strong>Data:</strong> ${dateStr}</p>
-                <p><strong>Horário:</strong> ${timeStr}</p>
-                <p><strong>Serviço(s):</strong> ${serviceNames}</p>
-                <p><strong>Profissional:</strong> ${professionalName}</p>
-                <br/>
-                <p><small>Este é um email automático do Sistema de Agendamentos.</small></p>
+                <div style="padding: 16px; border: 1px solid #E5E7EB; border-radius: 12px;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom: 8px;">
+                        ${salon.logo ? `<img src="${salon.logo}" alt="${salon.name}" style="width:40px; height:40px; border-radius:10px; object-fit:cover;" />` : ''}
+                        <div>
+                            <div style="font-size: 18px; font-weight: 700; color: #111827;">${salon.name}</div>
+                            <div style="font-size: 13px; color: #6B7280;">${subjectPrefix}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px; padding: 12px; background:#F9FAFB; border-radius: 10px;">
+                        <div style="font-size: 14px; line-height: 1.6;">
+                            <div><strong>Cliente:</strong> ${customerName}</div>
+                            <div><strong>Telefone:</strong> ${customerPhone}</div>
+                            <div><strong>Serviço(s):</strong> ${serviceNames}</div>
+                            <div><strong>Data:</strong> ${dateStr}</div>
+                            <div><strong>Horário:</strong> ${timeStr}</div>
+                            <div><strong>Profissional:</strong> ${professionalName}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px; font-size: 12px; color: #6B7280;">
+                        Este é um email automático do Sistema de Agendamentos.
+                    </div>
+                </div>
             </div>
         `;
 
-        // 1. Send to Salon Admin
-        if (salon.email) {
+        if (adminShouldNotify && isValidEmail(salon.email)) {
             await sendEmail(salon.email, subject, html);
         }
 
-        // 2. Send to Professional (Optional)
-        if (settings.notifyProfessional && professionalEmail) {
+        if (professionalShouldNotify && professionalOkForSalon && isValidEmail(professionalEmail)) {
             await sendEmail(professionalEmail, subject, html);
         }
 

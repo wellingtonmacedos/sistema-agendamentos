@@ -68,6 +68,7 @@ const createAppointment = async (req, res) => {
         if (result.length > 0) {
              sendAppointmentConfirmation(result[0]).catch(console.error);
              sendPushToAdmins(result[0]).catch(console.error);
+             sendEmailNotification(result[0]).catch(console.error);
         }
 
     } else {
@@ -336,12 +337,14 @@ const updateAppointment = async (req, res) => {
         if (updates.date || updates.startTime) {
              sendPushToAdmins(appointment, 'RESCHEDULE').catch(console.error);
              sendPushToClient(appointment, 'RESCHEDULE').catch(console.error);
+             sendEmailNotification(appointment, 'RESCHEDULE').catch(console.error);
         }
 
         // Detect Status Change (e.g. Cancelled)
         if (updates.status && updates.status === 'cancelled') {
              sendPushToAdmins(appointment, 'CANCEL').catch(console.error);
              sendPushToClient(appointment, 'CANCEL').catch(console.error);
+             sendEmailNotification(appointment, 'CANCEL').catch(console.error);
         } else if (updates.status && updates.status === 'confirmed') {
              sendPushToClient(appointment, 'CONFIRM').catch(console.error);
         }
