@@ -1075,8 +1075,11 @@ function App() {
       const path = window.location.pathname;
       const hostname = window.location.hostname;
       
-      if (path === '/login') {
-          localStorage.removeItem('token');
+      // Admin entry routes: /admin and /login (the PWA start_url) both lead to the admin area
+      const isAdminRoute = path === '/admin' || path === '/login' || hostname.startsWith('admin.');
+
+      // Opening /login without a session: show the login screen
+      if (path === '/login' && !localStorage.getItem('token')) {
           localStorage.removeItem('user');
           setAdminUser(null);
           setView('LOGIN');
@@ -1084,7 +1087,7 @@ function App() {
           return;
       }
 
-      if (path === '/admin' || hostname.startsWith('admin.')) {
+      if (isAdminRoute) {
           setView('LOGIN');
       }
 
@@ -1099,8 +1102,12 @@ function App() {
               setAdminUser(user);
               localStorage.setItem('user', JSON.stringify(user));
 
-              if (path === '/admin') {
+              if (isAdminRoute) {
                   setView('ADMIN');
+                  // If the PWA was opened at /login with a valid session, move to the panel URL
+                  if (path === '/login') {
+                      window.history.replaceState({}, '', '/admin');
+                  }
               }
           } catch (e) {
               console.error("Token validation failed", e);
@@ -1109,13 +1116,13 @@ function App() {
                   localStorage.removeItem('token');
                   localStorage.removeItem('user');
                   setAdminUser(null);
-                  if (path === '/admin') setView('LOGIN');
+                  if (isAdminRoute) setView('LOGIN');
               } else {
                   // Fallback to local storage if network error
                   const userStr = localStorage.getItem('user');
                   if (userStr) {
                       setAdminUser(JSON.parse(userStr));
-                      if (path === '/admin') setView('ADMIN');
+                      if (isAdminRoute) setView('ADMIN');
                   }
               }
           }

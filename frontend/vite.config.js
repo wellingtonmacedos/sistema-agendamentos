@@ -23,6 +23,8 @@ export default defineConfig({
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/login',
+        scope: '/',
         icons: [
           {
             src: '/Reservo-icon.png',
