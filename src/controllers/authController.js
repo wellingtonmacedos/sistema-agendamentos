@@ -5,83 +5,6 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key_123';
 
-const register = async (req, res) => {
-  try {
-    const { name, salonName, userName, email, password, phone } = req.body;
-
-    const finalSalonName = salonName || name;
-    const finalUserName = userName || name;
-
-    if (!finalSalonName || !email || !password) {
-      return res.status(400).json({ error: 'Nome do estabelecimento, email e senha são obrigatórios' });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email já cadastrado' });
-    }
-
-    // Check existing Salon (legacy check, maybe relax?)
-    // If we want multiple salons, email uniqueness on Salon is tricky if we reuse emails.
-    // But for now, let's keep it simple: 1 Salon = 1 Admin Email.
-    const existingSalon = await Salon.findOne({ email });
-    if (existingSalon) {
-         // If salon exists but user doesn't (migration edge case), we should fail or handle.
-         return res.status(400).json({ error: 'Email já cadastrado como estabelecimento' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newSalon = new Salon({
-      name: finalSalonName,
-      email, // Keep email in salon for reference
-      password: 'deprecated', // No longer used
-      phone
-    });
-
-    await newSalon.save();
-
-    const newUser = new User({
-        name: finalUserName,
-        email,
-        password: hashedPassword,
-        salonId: newSalon._id,
-        role: 'ADMIN'
-    });
-
-    await newUser.save();
-
-    // Generate Token
-    const token = jwt.sign(
-      { id: newUser._id, salonId: newSalon._id, role: 'ADMIN' },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.status(201).json({
-      message: 'Estabelecimento e usuário cadastrados com sucesso',
-      token,
-      salon: {
-        id: newSalon._id,
-        name: newSalon.name,
-        email: newSalon.email
-      },
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        salonId: newUser.salonId
-      }
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro interno ao registrar estabelecimento' });
-  }
-};
-
 const login = async (req, res) => {
   try {
     const { password } = req.body;
@@ -172,6 +95,5 @@ const login = async (req, res) => {
 };
 
 module.exports = {
-  register,
   login
 };

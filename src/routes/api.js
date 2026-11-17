@@ -11,7 +11,6 @@ const pushController = require('../controllers/pushController');
 const upload = require('../config/upload');
 
 // Auth Routes
-router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 
 // Public: Availability & Booking
