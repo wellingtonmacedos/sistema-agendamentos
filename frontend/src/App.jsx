@@ -1086,6 +1086,15 @@ function App() {
       // Admin entry routes: /admin and /login (the PWA start_url) both lead to the admin area
       const isAdminRoute = path === '/admin' || path === '/login' || hostname.startsWith('admin.');
 
+      // Bare domain root: show the public presentation page
+      // (each salon keeps its own booking link at /chat/:slug)
+      const isRootPath = path === '/' || path === '/index.html';
+      if (isRootPath && !isAdminRoute) {
+          setView('PRESENTATION');
+          setLoading(false);
+          return;
+      }
+
       // Opening /login without a session: show the login screen
       if (path === '/login' && !localStorage.getItem('token')) {
           localStorage.removeItem('user');
