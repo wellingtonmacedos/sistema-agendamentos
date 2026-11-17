@@ -21,8 +21,9 @@ import {
 } from 'lucide-react';
 
 const CONTACT_PHONE = '+55 (79) 99857-9844';
+const PLAN_PRICE = 'R$ 30';
 const WHATSAPP_URL =
-    'https://wa.me/5579998579844?text=Ol%C3%A1!%20Quero%20conhecer%20o%20Reservo';
+    'https://wa.me/5579998579844?text=Ol%C3%A1!%20Quero%20testar%20o%20Reservo%20no%20meu%20sal%C3%A3o';
 
 const features = [
     {
@@ -38,7 +39,7 @@ const features = [
     {
         icon: Bell,
         title: 'Lembretes automáticos',
-        text: 'Notificações push e e-mail para o cliente em cada novo agendamento, reagendamento ou cancelamento. Menos faltas, menos esquecimento.'
+        text: 'Lembrete automático antes do atendimento, além de avisos push e e-mail em cada novo agendamento, reagendamento ou cancelamento.'
     },
     {
         icon: TrendingUp,
@@ -92,6 +93,14 @@ const faq = [
     {
         q: 'Funciona no celular?',
         a: 'Sim. Tanto o chat de agendamento quanto o painel administrativo são responsivos e funcionam em celular, tablet e computador.'
+    },
+    {
+        q: 'Quanto custa?',
+        a: `Um único plano por ${PLAN_PRICE} por mês, sem fidelidade. Você começa com 30 dias grátis e configuramos o sistema pra você, com seus serviços, profissionais e horários.`
+    },
+    {
+        q: 'Posso cancelar quando quiser?',
+        a: 'Pode. Não há fidelidade nem multa: você usa enquanto fizer sentido e cancela quando quiser.'
     }
 ];
 
@@ -596,11 +605,12 @@ const Presentation = () => {
                         <span className="font-bold text-slate-900 text-lg">Reservo</span>
                     </a>
 
-                    <nav className="hidden md:flex items-center gap-7 text-sm text-slate-500">
+                    <nav className="hidden md:flex items-center gap-6 text-sm text-slate-500">
                         <a href="#recursos" className="hover:text-slate-900 transition-colors">Recursos</a>
                         <a href="#estilos" className="hover:text-slate-900 transition-colors">Para o seu negócio</a>
                         <a href="#telas" className="hover:text-slate-900 transition-colors">Telas do sistema</a>
                         <a href="#como-funciona" className="hover:text-slate-900 transition-colors">Como funciona</a>
+                        <a href="#plano" className="hover:text-slate-900 transition-colors">Preço</a>
                         <a href="#faq" className="hover:text-slate-900 transition-colors">Dúvidas</a>
                     </nav>
 
@@ -617,7 +627,7 @@ const Presentation = () => {
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                         >
-                            Quero conhecer
+                            Testar 30 dias grátis
                         </a>
                     </div>
                 </div>
@@ -658,7 +668,7 @@ const Presentation = () => {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
                             >
-                                Quero conhecer o Reservo <ArrowRight size={16} />
+                                Testar 30 dias grátis <ArrowRight size={16} />
                             </a>
                             <a
                                 href="#telas"
@@ -667,6 +677,10 @@ const Presentation = () => {
                                 Ver as telas
                             </a>
                         </div>
+
+                        <p className="text-sm text-slate-400 mb-6">
+                            30 dias grátis, sem cartão. Eu configuro o Reservo pra você — é só me chamar no WhatsApp.
+                        </p>
 
                         <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
                             {[
@@ -837,6 +851,60 @@ const Presentation = () => {
                 </div>
             </section>
 
+            {/* Plano */}
+            <section id="plano" className="py-20 bg-white">
+                <div className="max-w-6xl mx-auto px-5">
+                    <div className="max-w-2xl mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                            Um plano, sem fidelidade
+                        </h2>
+                        <p className="text-slate-500 text-lg">
+                            Sem taxa de adesão e sem contrato. Você começa com 30 dias grátis e cancela quando quiser.
+                        </p>
+                    </div>
+
+                    <div className="max-w-md mx-auto">
+                        <div className="rounded-3xl border-2 border-blue-600 bg-white p-8 shadow-xl shadow-blue-600/10">
+                            <span className="inline-block text-xs font-semibold bg-blue-50 text-blue-600 rounded-full px-3 py-1 mb-5">
+                                Plano Reservo
+                            </span>
+                            <div className="flex items-end gap-1">
+                                <span className="text-5xl font-bold text-slate-900">{PLAN_PRICE}</span>
+                                <span className="text-slate-400 mb-2">/mês</span>
+                            </div>
+                            <p className="text-sm text-slate-400 mt-1 mb-6">Sem fidelidade · cancele quando quiser</p>
+
+                            <ul className="space-y-3 mb-8">
+                                {[
+                                    'Agendamento online 24h por dia',
+                                    'Agenda por profissional',
+                                    'Lembretes automáticos antes do atendimento',
+                                    'Relatórios de faturamento',
+                                    'Controle de estoque',
+                                    'Chat personalizado com a sua marca'
+                                ].map((item) => (
+                                    <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                                        <CheckCircle size={16} className="text-green-500 mt-0.5 shrink-0" /> {item}
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <a
+                                href={WHATSAPP_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3.5 rounded-xl transition-colors"
+                            >
+                                Testar 30 dias grátis <ArrowRight size={16} />
+                            </a>
+                            <p className="text-xs text-slate-400 text-center mt-3">
+                                Eu configuro pra você, com seus serviços e horários.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* FAQ */}
             <section id="faq" className="py-20 bg-slate-50 border-y border-slate-100">
                 <div className="max-w-3xl mx-auto px-5">
@@ -872,7 +940,7 @@ const Presentation = () => {
                         Pronto para lotar a sua agenda?
                     </h2>
                     <p className="text-slate-300 text-lg mb-9 max-w-2xl mx-auto">
-                        Fale com a nossa equipe, veja o sistema funcionando com os seus serviços e comece a receber
+                        Comece com 30 dias grátis. Eu configuro o Reservo com os seus serviços e você passa a receber
                         agendamentos ainda esta semana.
                     </p>
 
@@ -883,7 +951,7 @@ const Presentation = () => {
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors"
                         >
-                            <MessageCircle size={17} /> Falar no WhatsApp
+                            <MessageCircle size={17} /> Testar 30 dias grátis
                         </a>
                         <a
                             href="/login"
