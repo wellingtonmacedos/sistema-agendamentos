@@ -91,7 +91,7 @@ const Agenda = () => {
 
     const playNotificationSound = () => {
         try {
-            const audio = new Audio('/ringtone.mp3');
+            const audio = new Audio('/ringtone.wav');
             audio.play().catch(e => console.log("Audio play failed (interaction needed):", e));
         } catch (e) {
             console.error("Audio error:", e);
@@ -113,7 +113,7 @@ const Agenda = () => {
             
             // Sound Notification Check
             if (isPolling && newAppointments.length > lastAppointmentCount) {
-                // playNotificationSound(); // Disabled for now to avoid annoyance
+                playNotificationSound();
             }
             setLastAppointmentCount(newAppointments.length);
             setAppointments(newAppointments);
