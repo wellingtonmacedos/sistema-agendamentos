@@ -21,9 +21,9 @@ const logAction = async (action, performedBy, target, details, ip) => {
 
 const listAdmins = async (req, res) => {
     try {
-        // List Users with role ADMIN
-        const admins = await User.find({ role: 'ADMIN', active: true }) // active check? old code checked deletedAt null
-            .populate('salonId', 'name phone settings');
+        // List Users with role ADMIN (including inactive, but excluding soft-deleted)
+        const admins = await User.find({ role: 'ADMIN', deletedAt: null })
+            .populate('salonId', 'name phone address settings');
         
         console.log(`[SuperAdmin] Listando administradores: ${admins.length} encontrados.`);
         
@@ -112,11 +112,11 @@ const updateAdmin = async (req, res) => {
         await admin.save();
 
         // Update linked Salon if needed
-        if (admin.salonId && (phone || salonName || typeof active === 'boolean')) {
+        if (admin.salonId && (phone !== undefined || salonName || typeof active === 'boolean')) {
             const salon = await Salon.findById(admin.salonId);
             if (salon) {
                 if (salonName) salon.name = salonName;
-                if (phone) salon.phone = phone;
+                if (phone !== undefined) salon.phone = phone;
                 if (typeof active === 'boolean') salon.active = active;
                 // If email changed, maybe update salon email too for consistency?
                 if (email) salon.email = email; 
@@ -142,15 +142,9 @@ const deleteAdmin = async (req, res) => {
             return res.status(404).json({ error: 'Administrador não encontrado' });
         }
 
-        // Soft delete User? User model doesn't have deletedAt in my definition.
-        // Let's add it or just set active = false.
-        // Or actually delete? The old code used soft delete (deletedAt).
-        // I should have added deletedAt to User model.
-        // For now, let's just set active = false and maybe rename email to release it?
-        // Or if I can add deletedAt to User schema, that's better.
-        // Let's assume active=false is enough for now, or I'll update User schema.
-        
+        // Soft delete User (keeps record for audit, but hides from the list)
         admin.active = false;
+        admin.deletedAt = new Date();
         await admin.save();
 
         // Soft delete Salon
