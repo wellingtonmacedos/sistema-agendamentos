@@ -6,6 +6,7 @@ import { Send, User, Users, Calendar, Clock, Scissors, CheckCircle, Store, Brief
 import clsx from 'clsx';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
+import Presentation from './components/Presentation';
 import { subscribeToPush, getPushPermissionState } from './utils/pushUtils';
 import { messageMap } from './utils/messageMap';
 
@@ -1074,7 +1075,14 @@ function App() {
 
       const path = window.location.pathname;
       const hostname = window.location.hostname;
-      
+
+      // Public presentation page (standalone, no auth, no chat logic)
+      if (path === '/apresentacao' || path === '/apresentacao/') {
+          setView('PRESENTATION');
+          setLoading(false);
+          return;
+      }
+
       // Admin entry routes: /admin and /login (the PWA start_url) both lead to the admin area
       const isAdminRoute = path === '/admin' || path === '/login' || hostname.startsWith('admin.');
 
@@ -1140,6 +1148,10 @@ function App() {
 
   if (view === 'ADMIN') {
     return <AdminDashboard user={adminUser} onLogout={handleLogout} />;
+  }
+
+  if (view === 'PRESENTATION') {
+    return <Presentation />;
   }
 
   return (
