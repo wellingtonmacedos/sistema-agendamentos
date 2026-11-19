@@ -129,69 +129,120 @@ const Products = () => {
             {loading ? (
                 <div className="text-center py-10">Carregando...</div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b">
-                            <tr>
-                                <th className="p-4 font-semibold text-gray-600">Nome</th>
-                                <th className="p-4 font-semibold text-gray-600">Preço</th>
-                                <th className="p-4 font-semibold text-gray-600">Estoque</th>
-                                <th className="p-4 font-semibold text-gray-600">Status</th>
-                                <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {filteredProducts.map(product => (
-                                <tr key={product._id} className="hover:bg-gray-50">
-                                    <td className="p-4 font-medium text-gray-800">{product.name}</td>
-                                    <td className="p-4 text-gray-600">R$ {product.price.toFixed(2)}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                            product.stock > 10 ? 'bg-green-100 text-green-700' : 
-                                            product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                                        }`}>
-                                            {product.stock} un
+                <>
+                    {/* Mobile: cards (evita tabela estourando a largura da tela) */}
+                    <div className="md:hidden space-y-3">
+                        {filteredProducts.map(product => (
+                            <div key={product._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="font-semibold text-gray-800 break-words">{product.name}</p>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-bold flex-shrink-0 ${
+                                        product.stock > 10 ? 'bg-green-100 text-green-700' :
+                                        product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                    }`}>
+                                        {product.stock} un
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">R$ {product.price.toFixed(2)}</p>
+                                <div className="mt-1">
+                                    {product.active ? (
+                                        <span className="flex items-center gap-1 text-green-600 text-sm">
+                                            <CheckCircle size={14} /> Ativo
                                         </span>
-                                    </td>
-                                    <td className="p-4">
-                                        {product.active ? (
-                                            <span className="flex items-center gap-1 text-green-600 text-sm">
-                                                <CheckCircle size={14} /> Ativo
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1 text-gray-400 text-sm">
-                                                <X size={14} /> Inativo
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="p-4 text-right space-x-2">
-                                        <button 
-                                            onClick={() => openEditModal(product)}
-                                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors"
-                                            title="Editar"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(product._id)}
-                                            className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredProducts.length === 0 && (
+                                    ) : (
+                                        <span className="flex items-center gap-1 text-gray-400 text-sm">
+                                            <X size={14} /> Inativo
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                    <button
+                                        onClick={() => openEditModal(product)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                                    >
+                                        <Edit size={16} /> Editar
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(product._id)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 text-sm font-medium"
+                                    >
+                                        <Trash2 size={16} /> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {filteredProducts.length === 0 && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 text-center text-gray-500">
+                                Nenhum produto encontrado.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop: tabela */}
+                    <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b">
                                 <tr>
-                                    <td colSpan="5" className="p-8 text-center text-gray-500">
-                                        Nenhum produto encontrado.
-                                    </td>
+                                    <th className="p-4 font-semibold text-gray-600">Nome</th>
+                                    <th className="p-4 font-semibold text-gray-600">Preço</th>
+                                    <th className="p-4 font-semibold text-gray-600">Estoque</th>
+                                    <th className="p-4 font-semibold text-gray-600">Status</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y">
+                                {filteredProducts.map(product => (
+                                    <tr key={product._id} className="hover:bg-gray-50">
+                                        <td className="p-4 font-medium text-gray-800">{product.name}</td>
+                                        <td className="p-4 text-gray-600">R$ {product.price.toFixed(2)}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                product.stock > 10 ? 'bg-green-100 text-green-700' : 
+                                                product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                            }`}>
+                                                {product.stock} un
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            {product.active ? (
+                                                <span className="flex items-center gap-1 text-green-600 text-sm">
+                                                    <CheckCircle size={14} /> Ativo
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-gray-400 text-sm">
+                                                    <X size={14} /> Inativo
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="p-4 text-right space-x-2">
+                                            <button 
+                                                onClick={() => openEditModal(product)}
+                                                className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                                                title="Editar"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(product._id)}
+                                                className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                                title="Excluir"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredProducts.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" className="p-8 text-center text-gray-500">
+                                            Nenhum produto encontrado.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
 
             {/* Modal */}

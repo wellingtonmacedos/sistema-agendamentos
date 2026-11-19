@@ -127,13 +127,45 @@ const Professionals = () => {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Profissionais</h2>
-                <button onClick={() => setEditing({})} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <div className="flex justify-between items-center gap-3 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Profissionais</h2>
+                <button onClick={() => setEditing({})} className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap">
                     + Novo Profissional
                 </button>
             </div>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+
+            {/* Mobile: cards (evita tabela estourando a largura da tela) */}
+            <div className="md:hidden space-y-3">
+                {professionals.map(p => (
+                    <div key={p._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <p className="font-semibold text-gray-900 break-words">{p.name}</p>
+                        <p className="text-sm text-gray-600 mt-1 break-words">{p.email || '-'}</p>
+                        <p className="text-sm text-gray-600">{p.phone || '-'}</p>
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => setEditing(p)}
+                                className="flex-1 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                            >
+                                Editar
+                            </button>
+                            <button
+                                onClick={() => handleDelete(p._id)}
+                                className="flex-1 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 text-sm font-medium"
+                            >
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {professionals.length === 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 text-center text-gray-500">
+                        Nenhum profissional cadastrado.
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop: tabela */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>

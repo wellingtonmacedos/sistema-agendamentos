@@ -110,51 +110,83 @@ const Customers = () => {
             {loading ? (
                 <div className="text-center py-10 text-gray-400">Carregando...</div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                            <tr>
-                                <th className="p-4">Nome</th>
-                                <th className="p-4">Telefone</th>
-                                <th className="p-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {customers.map(c => (
-                                <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-4 font-medium text-gray-800">{c.name}</td>
-                                    <td className="p-4 text-gray-600">{c.phone}</td>
-                                    <td className="p-4 text-right">
-                                        <button 
-                                            onClick={() => handleEdit(c)}
-                                            className="text-gray-400 hover:text-blue-600 p-1 mr-2"
-                                            title="Editar"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(c._id)}
-                                            className="text-gray-400 hover:text-red-600 p-1"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {customers.length === 0 && (
+                <>
+                    {/* Mobile: cards (evita tabela estourando a largura da tela) */}
+                    <div className="md:hidden space-y-3">
+                        {customers.map(c => (
+                            <div key={c._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                                <p className="font-semibold text-gray-800 break-words">{c.name}</p>
+                                <p className="text-sm text-gray-600 mt-0.5">{c.phone}</p>
+                                <div className="flex gap-2 mt-3">
+                                    <button
+                                        onClick={() => handleEdit(c)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                                    >
+                                        <Edit size={16} /> Editar
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(c._id)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 text-sm font-medium"
+                                    >
+                                        <Trash2 size={16} /> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {customers.length === 0 && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 text-center text-gray-500">
+                                Nenhum cliente encontrado.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop: tabela */}
+                    <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
                                 <tr>
-                                    <td colSpan="3" className="p-8 text-center text-gray-500">
-                                        Nenhum cliente encontrado.
-                                    </td>
+                                    <th className="p-4">Nome</th>
+                                    <th className="p-4">Telefone</th>
+                                    <th className="p-4 text-right">Ações</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                    
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {customers.map(c => (
+                                    <tr key={c._id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-4 font-medium text-gray-800">{c.name}</td>
+                                        <td className="p-4 text-gray-600">{c.phone}</td>
+                                        <td className="p-4 text-right">
+                                            <button 
+                                                onClick={() => handleEdit(c)}
+                                                className="text-gray-400 hover:text-blue-600 p-1 mr-2"
+                                                title="Editar"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(c._id)}
+                                                className="text-gray-400 hover:text-red-600 p-1"
+                                                title="Excluir"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {customers.length === 0 && (
+                                    <tr>
+                                        <td colSpan="3" className="p-8 text-center text-gray-500">
+                                            Nenhum cliente encontrado.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="p-4 border-t border-gray-100 flex justify-between items-center">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex justify-between items-center">
                             <button 
                                 disabled={page === 1}
                                 onClick={() => setPage(p => p - 1)}
@@ -172,7 +204,7 @@ const Customers = () => {
                             </button>
                         </div>
                     )}
-                </div>
+                </>
             )}
 
             {/* Modal */}

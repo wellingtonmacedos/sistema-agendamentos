@@ -55,7 +55,43 @@ const AuditLogs = () => {
                 Logs de Auditoria
             </h2>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border">
+            {/* Mobile: cards (evita tabela estourando a largura da tela) */}
+            <div className="md:hidden space-y-3">
+                {logs.map((log) => (
+                    <div key={log._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
+                                {getActionLabel(log.action)}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
+                                <Clock size={12} />
+                                {format(new Date(log.timestamp), 'dd/MM/yy HH:mm', { locale: ptBR })}
+                            </span>
+                        </div>
+                        <div className="text-sm text-gray-700 font-medium break-words">
+                            {log.performedBy?.name || 'Sistema'}
+                            <span className="text-xs text-gray-400 font-normal"> · {log.performedBy?.email}</span>
+                        </div>
+                        {log.targetName && (
+                            <div className="text-sm text-gray-600 break-words">Alvo: {log.targetName}</div>
+                        )}
+                        <div className="text-xs text-gray-500 font-mono break-all">
+                            {JSON.stringify(log.details)}
+                        </div>
+                        {log.ipAddress && (
+                            <div className="text-xs text-gray-400">IP: {log.ipAddress}</div>
+                        )}
+                    </div>
+                ))}
+                {logs.length === 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 text-center text-gray-500">
+                        Nenhum registro encontrado.
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop: tabela */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border">
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 border-b">
                         <tr>
