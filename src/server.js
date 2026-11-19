@@ -65,7 +65,13 @@ app.get('/dynamic-manifest/:salonId', (req, res) => {
 // Catch-all handler for SPA (React) with Dynamic Meta Tags
 app.get('*', async (req, res) => {
     const filePath = path.join(__dirname, '../frontend/dist/index.html');
-    
+
+    // Arquivos inexistentes (assets, .js, .css, .png...) devem retornar 404,
+    // e não o index.html. Evita tela branca quando o PWA em cache pede um bundle antigo.
+    if (req.path.startsWith('/assets/') || path.extname(req.path)) {
+        return res.status(404).send('Not found');
+    }
+
     // Check if it's a chat route
     const chatMatch = req.path.match(/^\/chat\/([^\/]+)/);
     
