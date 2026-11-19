@@ -367,7 +367,7 @@ const ChatSettings = () => {
                 <div className="order-1 lg:order-2 space-y-4">
                     <h3 className="font-semibold text-gray-700">Pré-visualização</h3>
 
-                    <div className={`bg-gray-100 rounded-[2rem] sm:rounded-[2.5rem] border-[6px] border-gray-800 p-2.5 sm:p-4 h-[460px] sm:h-[560px] lg:h-[600px] w-full max-w-[340px] sm:max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative ${isFeminine ? 'font-soft' : ''}`}>
+                    <div className={`isolate bg-gray-100 rounded-[2rem] sm:rounded-[2.5rem] border-[6px] border-gray-800 p-2.5 sm:p-4 h-[460px] sm:h-[560px] lg:h-[600px] w-full max-w-[340px] sm:max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative ${isFeminine ? 'font-soft' : ''}`}>
                         {/* Fake Phone Header */}
                         <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800 w-1/2 mx-auto rounded-b-xl z-20"></div>
                         
