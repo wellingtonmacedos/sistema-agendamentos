@@ -116,8 +116,8 @@ export const messageMap = {
         feminine: "Tanto faz / Sem preferência ✨"
     },
     welcomeBackDevice: {
-        neutral: (name) => `Olá novamente, **${name}**! 👋 (Reconhecido pelo seu dispositivo)`,
-        feminine: (name) => `Oi de novo, **${name}**! 💕 (Te reconheci pelo dispositivo!)`
+        neutral: (name) => `Olá novamente, **${name}**! 👋`,
+        feminine: (name) => `Oi de novo, **${name}**! 💕`
     },
     errorFetchingAppointments: {
         neutral: "Erro ao buscar seus agendamentos.",
