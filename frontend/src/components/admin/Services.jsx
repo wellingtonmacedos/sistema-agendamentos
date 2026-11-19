@@ -278,13 +278,55 @@ const Services = () => {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Serviços</h2>
-                <button onClick={() => setEditing({})} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <div className="flex justify-between items-center gap-3 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Serviços</h2>
+                <button onClick={() => setEditing({})} className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap">
                     + Novo Serviço
                 </button>
             </div>
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+
+            {/* Mobile: cards (evita tabela estourando a largura da tela) */}
+            <div className="md:hidden space-y-3">
+                {services.map(s => (
+                    <div key={s._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <div className="flex items-start gap-3">
+                            {s.image ? (
+                                <img src={s.image} alt={s.name} className="h-14 w-20 object-cover rounded flex-shrink-0" />
+                            ) : (
+                                <div className="h-14 w-20 bg-gray-100 rounded flex items-center justify-center text-gray-400 flex-shrink-0">
+                                    <ImageIcon size={20} />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 break-words">{s.name}</p>
+                                <p className="text-sm text-gray-600 mt-0.5">R$ {s.price.toFixed(2)} · {s.duration} min</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => setEditing(s)}
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                            >
+                                <Edit size={16} /> Editar
+                            </button>
+                            <button
+                                onClick={() => handleDelete(s._id)}
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 text-sm font-medium"
+                            >
+                                <Trash size={16} /> Excluir
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {services.length === 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 text-center text-gray-500">
+                        Nenhum serviço cadastrado.
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop: tabela */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
