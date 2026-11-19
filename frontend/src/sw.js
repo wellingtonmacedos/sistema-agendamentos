@@ -1,4 +1,9 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
+import { clientsClaim } from 'workbox-core'
+
+// Ativa a nova versão imediatamente (necessário para o autoUpdate, sobretudo no iOS)
+self.skipWaiting()
+clientsClaim()
 
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
