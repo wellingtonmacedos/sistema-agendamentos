@@ -77,15 +77,15 @@ const ChatSettings = () => {
     };
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <MessageSquare className="text-blue-600" />
                 Personalização do Chat
             </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Form Column */}
-                <div className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="order-2 lg:order-1 space-y-6 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="font-semibold text-gray-700 border-b pb-2 mb-4">Aparência & Identidade</h3>
                     
                     {/* Assistant Identity */}
@@ -105,7 +105,7 @@ const ChatSettings = () => {
                     {/* Avatar */}
                     <div className="space-y-3">
                         <label className="block text-sm font-medium text-gray-700">Avatar do Assistente</label>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                             <input 
                                 type="text" 
                                 name="avatarUrl"
@@ -364,10 +364,10 @@ const ChatSettings = () => {
                 </div>
 
                 {/* Preview Column */}
-                <div className="space-y-4">
+                <div className="order-1 lg:order-2 space-y-4">
                     <h3 className="font-semibold text-gray-700">Pré-visualização</h3>
-                    
-                    <div className={`bg-gray-100 rounded-[2.5rem] border-4 border-gray-800 p-4 h-[600px] w-full max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative ${isFeminine ? 'font-soft' : ''}`}>
+
+                    <div className={`bg-gray-100 rounded-[2rem] sm:rounded-[2.5rem] border-[6px] border-gray-800 p-2.5 sm:p-4 h-[460px] sm:h-[560px] lg:h-[600px] w-full max-w-[340px] sm:max-w-sm mx-auto shadow-2xl overflow-hidden flex flex-col relative ${isFeminine ? 'font-soft' : ''}`}>
                         {/* Fake Phone Header */}
                         <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800 w-1/2 mx-auto rounded-b-xl z-20"></div>
                         
@@ -395,7 +395,7 @@ const ChatSettings = () => {
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-opacity-50" style={{ backgroundColor: config.backgroundColor }}>
+                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-opacity-50" style={{ backgroundColor: config.backgroundColor }}>
                             {/* Bot Welcome */}
                             <div className="flex gap-2">
                                 {config.showAvatar && (
