@@ -13,6 +13,18 @@ const timeToDate = (timeStr, baseDate) => {
     return date;
 };
 
+// O sistema grava e exibe horarios no "relogio de parede" local do servidor.
+// O negocio opera em America/Sao_Paulo (UTC-3), mas o servidor roda em UTC,
+// entao "new Date()" fica 3h a frente do horario real do salao e o filtro de
+// antecedencia minima apagava os horarios do dia inteiro. Esta funcao devolve
+// o horario atual do negocio na MESMA referencia usada pelos horarios salvos.
+const BUSINESS_OFFSET_MIN = -180; // America/Sao_Paulo (UTC-3, sem horario de verao desde 2019)
+
+const businessNow = () => {
+    const serverOffsetMin = -new Date().getTimezoneOffset();
+    return new Date(Date.now() + (BUSINESS_OFFSET_MIN - serverOffsetMin) * 60 * 1000);
+};
+
 /**
  * Calculate available slots respecting:
  * 1. Salon Working Hours (Open/Close)
@@ -79,7 +91,7 @@ const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds) =
     const { slotInterval = 30, appointmentBuffer = 0, minNoticeMinutes = 60, maxFutureDays = 30 } = salon.settings || {};
 
     // 4. Validate Future Limit
-    const today = startOfDay(new Date());
+    const today = startOfDay(businessNow());
     const targetDate = startOfDay(date);
     const maxDate = addMinutes(today, maxFutureDays * 24 * 60);
     
@@ -103,7 +115,7 @@ const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds) =
     
     // Determine start point (considering minNotice if today)
     let currentTime = openTime;
-    const now = new Date();
+    const now = businessNow();
     const minStart = addMinutes(now, minNoticeMinutes);
 
     while (addMinutes(currentTime, totalDuration) <= closeTime) {
