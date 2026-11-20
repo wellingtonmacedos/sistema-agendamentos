@@ -424,7 +424,7 @@ const Agenda = () => {
         e.preventDefault();
         try {
             await axios.post('/api/agendamentos', {
-                salao_id: user.id,
+                salao_id: user.salonId || user.id,
                 profissional_id: formData.professionalId,
                 servicos: [formData.serviceId], // Array expected
                 data: formData.date,
