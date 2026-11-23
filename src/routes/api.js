@@ -5,7 +5,7 @@ const adminController = require('../controllers/adminController');
 const reportController = require('../controllers/reportController');
 const authController = require('../controllers/authController');
 const customerController = require('../controllers/customerController');
-const { authMiddleware, checkRole } = require('../middlewares/authMiddleware');
+const { authMiddleware, optionalAuth, checkRole } = require('../middlewares/authMiddleware');
 const userManagementController = require('../controllers/userManagementController');
 const pushController = require('../controllers/pushController');
 const upload = require('../config/upload');
@@ -14,7 +14,8 @@ const upload = require('../config/upload');
 router.post('/auth/login', authController.login);
 
 // Public: Availability & Booking
-router.get('/disponibilidade/horarios', appointmentController.getAvailability);
+// optionalAuth: identifica o admin (painel) sem exigir token, o que libera dias passados apenas para ele
+router.get('/disponibilidade/horarios', optionalAuth, appointmentController.getAvailability);
 router.post('/agendamentos', appointmentController.createAppointment);
 router.get('/services', appointmentController.getServices);
 router.get('/salons', appointmentController.getSalons);

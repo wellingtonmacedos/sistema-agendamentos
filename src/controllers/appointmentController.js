@@ -17,11 +17,13 @@ const getAvailability = async (req, res) => {
 
     // Use centralized logic from availabilityService
     // It returns objects { time, available: true }. We map to simple array of strings for API contract.
+    // allowPast: o painel administrativo (requisicao autenticada) pode marcar dias passados para controle de caixa.
     const slots = await availabilityService.getAvailableSlots(
         salao_id, 
         data, 
         profissional_id, 
-        Array.isArray(servicos) ? servicos : [servicos]
+        Array.isArray(servicos) ? servicos : [servicos],
+        { allowPast: !!req.user }
     );
 
     const horarios = slots.map(s => s.time);

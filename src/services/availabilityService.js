@@ -34,7 +34,9 @@ const businessNow = () => {
  * 5. Agenda Settings (Min Notice, Future Limit, Buffer)
  * 6. Existing Appointments
  */
-const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds) => {
+const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds, options = {}) => {
+    // allowPast: usado pelo painel administrativo para marcar horarios de dias passados.
+    const { allowPast = false } = options;
     const date = new Date(dateStr + 'T00:00:00');
     const dayOfWeek = date.getDay(); // 0 = Sunday
 
@@ -96,7 +98,8 @@ const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds) =
     const maxDate = addMinutes(today, maxFutureDays * 24 * 60);
     
     if (isAfter(targetDate, maxDate)) return [];
-    if (isBefore(targetDate, today)) return []; // Past days
+    // Dias passados seguem bloqueados para o cliente; o painel (allowPast) pode lancar para o caixa.
+    if (!allowPast && isBefore(targetDate, today)) return [];
 
     // 5. Fetch Conflicts (Appointments)
     // dayStart and dayEnd are already defined above
@@ -125,8 +128,8 @@ const getAvailableSlots = async (salonId, dateStr, professionalId, serviceIds) =
         // Checks:
         let isAvailable = true;
 
-        // A. Past / Notice
-        if (isBefore(slotStart, minStart)) {
+        // A. Past / Notice (ignorado no painel, que tambem lanca horarios ja passados do dia)
+        if (!allowPast && isBefore(slotStart, minStart)) {
             isAvailable = false;
         }
 

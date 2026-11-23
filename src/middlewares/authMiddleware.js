@@ -25,6 +25,25 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// Nao bloqueia a requisicao: apenas identifica o usuario quando ha um token valido.
+// Usado em rotas publicas que precisam de um comportamento extra para o admin.
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    if (token) {
+      try {
+        req.user = jwt.verify(token, JWT_SECRET);
+      } catch (error) {
+        // Token invalido ou expirado: a rota segue publica
+      }
+    }
+  }
+
+  next();
+};
+
 const checkRole = (roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -34,4 +53,4 @@ const checkRole = (roles) => {
   };
 };
 
-module.exports = { authMiddleware, checkRole };
+module.exports = { authMiddleware, optionalAuth, checkRole };
