@@ -417,7 +417,9 @@ function App() {
         const res = await axios.get(`/api/professionals?salao_id=${booking.salon._id}`);
         setProfessionals(res.data);
         
-        if (res.data.length > 0) {
+        if (res.data.length === 1) {
+            handleProfessionalSelect(res.data[0], true);
+        } else if (res.data.length > 1) {
             addMessage(getMessage('chooseProfessional'));
             goToStep('PROFESSIONAL');
         } else {
@@ -430,9 +432,13 @@ function App() {
     }
   };
 
-  const handleProfessionalSelect = (prof) => {
+  const handleProfessionalSelect = (prof, automatic = false) => {
     if (prof) {
-        addMessage(prof.name, 'user');
+        if (automatic) {
+            addMessage(getMessage('professionalSelectedAutomatically', prof.name));
+        } else {
+            addMessage(prof.name, 'user');
+        }
         setBooking(prev => ({ ...prev, professional: prof }));
     } else {
         addMessage(getMessage('noPreference'), 'user');

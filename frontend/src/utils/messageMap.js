@@ -39,6 +39,10 @@ export const messageMap = {
         neutral: "Escolha o profissional.",
         feminine: "Com quem você gostaria de ser atendida? 👩‍🎨"
     },
+    professionalSelectedAutomatically: {
+        neutral: (name) => `Como há apenas um profissional, ${name} foi selecionado automaticamente.`,
+        feminine: (name) => `Temos apenas ${name} para este atendimento, então já deixei selecionado para você. ✨`
+    },
     chooseDate: {
         neutral: "Escolha a data.",
         feminine: "Qual o melhor dia para você? 📅"
