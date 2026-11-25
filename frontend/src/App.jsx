@@ -104,8 +104,18 @@ function App() {
   const [chatConfig, setChatConfig] = useState({
     botBubbleColor: '#FFFFFF',
     botTextColor: '#334155',
+    botBubbleBorderColor: '#E2E8F0',
     userBubbleColor: '#1e293b',
     userTextColor: '#FFFFFF',
+    userBubbleBorderColor: '#2563EB',
+    bubbleBorderWidth: 1,
+    bubbleRadius: 16,
+    responseAreaColor: '#FFFFFF',
+    responseAreaBorderColor: '#E2E8F0',
+    responseAreaBorderWidth: 1,
+    responseOptionColor: '#FFFFFF',
+    responseOptionBorderColor: '#E2E8F0',
+    responseOptionBorderWidth: 1,
     buttonColor: '#3B82F6',
     backgroundColor: '#f8fafc',
     headerColor: '#FFFFFF',
@@ -551,6 +561,13 @@ function App() {
     borderColor: chatConfig.buttonColor,
     '--accent-color': chatConfig.buttonColor // Used for hover/text via CSS variable if needed, but we'll use inline styles for specifics
   });
+  const getResponseOptionStyle = (overrides = {}) => ({
+    backgroundColor: chatConfig.responseOptionColor || '#FFFFFF',
+    borderColor: chatConfig.responseOptionBorderColor || '#E2E8F0',
+    borderWidth: `${chatConfig.responseOptionBorderWidth ?? 1}px`,
+    borderStyle: 'solid',
+    ...overrides
+  });
 
   // Renderers
   const renderContent = () => {
@@ -593,7 +610,10 @@ function App() {
                       isSelected ? "ring-2 ring-offset-2" : "opacity-90 hover:opacity-100"
                     )}
                     style={{ 
-                        borderColor: isSelected ? chatConfig.buttonColor : '#e2e8f0',
+                        backgroundColor: chatConfig.responseOptionColor || '#FFFFFF',
+                        borderColor: isSelected ? chatConfig.buttonColor : (chatConfig.responseOptionBorderColor || '#E2E8F0'),
+                        borderWidth: `${chatConfig.responseOptionBorderWidth ?? 1}px`,
+                        borderStyle: 'solid',
                         '--tw-ring-color': chatConfig.buttonColor
                     }}
                   >
@@ -659,7 +679,8 @@ function App() {
                 className="card hover:opacity-90 text-left flex items-center gap-2 transition-all p-2"
                 style={{ 
                     backgroundColor: chatConfig.buttonColor, 
-                    color: '#fff' 
+                    color: '#fff',
+                    ...getResponseOptionStyle({ backgroundColor: chatConfig.buttonColor, color: '#fff' })
                 }}
               >
                 <div className="bg-white/20 p-1.5 rounded-full text-white"><Briefcase size={16} /></div>
@@ -688,8 +709,11 @@ function App() {
                     )}
                     style={{
                         backgroundColor: isSelected ? chatConfig.buttonColor : '#fff',
-                        borderColor: isSelected ? chatConfig.buttonColor : '#e2e8f0',
-                        color: isSelected ? '#fff' : '#1e293b'
+                        ...getResponseOptionStyle({
+                            backgroundColor: isSelected ? chatConfig.buttonColor : (chatConfig.responseOptionColor || '#FFFFFF'),
+                            borderColor: isSelected ? chatConfig.buttonColor : (chatConfig.responseOptionBorderColor || '#E2E8F0'),
+                            color: isSelected ? '#fff' : '#1e293b'
+                        }),
                     }}
                   >
                     <span className="text-xs uppercase">{format(d, 'EEE', { locale: ptBR })}</span>
@@ -706,16 +730,14 @@ function App() {
               <button 
                 key={t} 
                 onClick={() => handleTimeSelect(t)}
-                className="py-2 px-1 bg-white border border-slate-200 rounded-lg text-sm hover:opacity-80 transition-all"
-                style={{
-                    color: '#1e293b'
-                }}
+                className="py-2 px-1 rounded-lg text-sm hover:opacity-80 transition-all"
+                style={getResponseOptionStyle({ color: '#1e293b' })}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = chatConfig.buttonColor;
                     e.currentTarget.style.color = '#fff';
                 }}
                 onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#fff';
+                    e.currentTarget.style.backgroundColor = chatConfig.responseOptionColor || '#FFFFFF';
                     e.currentTarget.style.color = '#1e293b';
                 }}
               >
@@ -751,7 +773,7 @@ function App() {
                 }, 3000);
               }} 
               className="card hover:opacity-90 text-left flex items-center gap-3 transition-all bg-white border border-slate-200"
-              style={{ color: '#ef4444' }} // Red for cancel
+              style={getResponseOptionStyle({ color: '#ef4444' })} // Red for cancel
             >
               <div className="bg-red-50 p-2 rounded-full text-red-500"><Trash2 size={20} /></div>
               <div className="font-medium">{getMessage('noCancelService')}</div>
@@ -801,7 +823,7 @@ function App() {
                 setStep('FINAL');
               }}
               className="card p-3 flex flex-col items-center gap-2 hover:bg-slate-100 transition-all bg-white border border-slate-200"
-              style={{ color: '#64748b' }}
+              style={getResponseOptionStyle({ color: '#64748b' })}
             >
               <div className="bg-slate-100 p-2 rounded-full"><X size={24} /></div>
               <div className="font-bold">{getMessage('no').toUpperCase()}</div>
@@ -1236,13 +1258,14 @@ function App() {
               )}
 
               <div 
-                className={clsx(
-                    "max-w-[75%] p-3 rounded-2xl text-sm whitespace-pre-line shadow-sm",
-                    msg.sender === 'user' ? "rounded-tr-none" : "rounded-tl-none border border-slate-100"
-                )}
+                className="max-w-[75%] p-3 text-sm whitespace-pre-line shadow-sm"
                 style={{
                     backgroundColor: msg.sender === 'user' ? chatConfig.userBubbleColor : chatConfig.botBubbleColor,
-                    color: msg.sender === 'user' ? chatConfig.userTextColor : chatConfig.botTextColor
+                    color: msg.sender === 'user' ? chatConfig.userTextColor : chatConfig.botTextColor,
+                    border: `${chatConfig.bubbleBorderWidth ?? 1}px solid ${msg.sender === 'user' ? (chatConfig.userBubbleBorderColor || '#2563EB') : (chatConfig.botBubbleBorderColor || '#E2E8F0')}`,
+                    borderRadius: msg.sender === 'user'
+                      ? `${chatConfig.bubbleRadius ?? 16}px 0 ${chatConfig.bubbleRadius ?? 16}px ${chatConfig.bubbleRadius ?? 16}px`
+                      : `0 ${chatConfig.bubbleRadius ?? 16}px ${chatConfig.bubbleRadius ?? 16}px ${chatConfig.bubbleRadius ?? 16}px`
                 }}
               >
                 {msg.type === 'image' ? (
@@ -1271,7 +1294,15 @@ function App() {
                     )}
                  </div>
                )}
-               <div className="bg-white border border-slate-100 shadow-sm rounded-2xl rounded-tl-none p-3">
+               <div
+                 className="shadow-sm p-3"
+                 style={{
+                   backgroundColor: chatConfig.botBubbleColor,
+                   color: chatConfig.botTextColor,
+                   border: `${chatConfig.bubbleBorderWidth ?? 1}px solid ${chatConfig.botBubbleBorderColor || '#E2E8F0'}`,
+                   borderRadius: `0 ${chatConfig.bubbleRadius ?? 16}px ${chatConfig.bubbleRadius ?? 16}px ${chatConfig.bubbleRadius ?? 16}px`
+                 }}
+               >
                  <div className="flex gap-1">
                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></span>
@@ -1284,7 +1315,13 @@ function App() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t">
+        <div
+          className="p-4 border-t"
+          style={{
+            backgroundColor: chatConfig.responseAreaColor || '#FFFFFF',
+            borderTop: `${chatConfig.responseAreaBorderWidth ?? 1}px solid ${chatConfig.responseAreaBorderColor || '#E2E8F0'}`
+          }}
+        >
           {['IDENTIFY_PHONE', 'IDENTIFY_NAME'].includes(step) ? (
             <form onSubmit={handleInputSubmit} className="flex gap-2">
               <input 

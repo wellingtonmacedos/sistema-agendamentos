@@ -3,12 +3,46 @@ import axios from 'axios';
 import { Save, MessageSquare, User, Send, Bot } from 'lucide-react';
 import { messageMap } from '../../utils/messageMap';
 
+const ColorField = ({ label, name, value, onChange }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="flex gap-2 items-center">
+            <input
+                type="color"
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="h-10 w-12 p-0.5 rounded cursor-pointer border-2 border-gray-200"
+                title="Escolher cor"
+            />
+            <input
+                type="text"
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="flex-1 min-w-0 border rounded-lg px-3 py-2 text-sm uppercase font-mono"
+                placeholder="#000000"
+            />
+        </div>
+    </div>
+);
+
 const ChatSettings = () => {
     const [config, setConfig] = useState({
         botBubbleColor: '#F3F4F6',
         botTextColor: '#1F2937',
+        botBubbleBorderColor: '#E2E8F0',
         userBubbleColor: '#3B82F6',
         userTextColor: '#FFFFFF',
+        userBubbleBorderColor: '#2563EB',
+        bubbleBorderWidth: 1,
+        bubbleRadius: 16,
+        responseAreaColor: '#FFFFFF',
+        responseAreaBorderColor: '#E2E8F0',
+        responseAreaBorderWidth: 1,
+        responseOptionColor: '#FFFFFF',
+        responseOptionBorderColor: '#E2E8F0',
+        responseOptionBorderWidth: 1,
         buttonColor: '#3B82F6',
         backgroundColor: '#F9FAFB',
         headerColor: '#FFFFFF',
@@ -43,7 +77,7 @@ const ChatSettings = () => {
         const { name, value, type, checked } = e.target;
         setConfig(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: type === 'checkbox' ? checked : type === 'range' ? Number(value) : value
         }));
     };
 
@@ -213,6 +247,110 @@ const ChatSettings = () => {
                                     onChange={handleChange}
                                     className="flex-1 border rounded-lg px-3 py-2 text-sm uppercase font-mono"
                                     placeholder="#000000"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                            <h4 className="md:col-span-2 font-semibold text-sm text-gray-700">Bordas dos balões</h4>
+                            <ColorField
+                                label="Borda do balão do assistente"
+                                name="botBubbleBorderColor"
+                                value={config.botBubbleBorderColor}
+                                onChange={handleChange}
+                            />
+                            <ColorField
+                                label="Borda do balão do cliente"
+                                name="userBubbleBorderColor"
+                                value={config.userBubbleBorderColor}
+                                onChange={handleChange}
+                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Espessura da borda: {config.bubbleBorderWidth}px
+                                </label>
+                                <input
+                                    type="range"
+                                    name="bubbleBorderWidth"
+                                    min="0"
+                                    max="4"
+                                    step="1"
+                                    value={config.bubbleBorderWidth}
+                                    onChange={handleChange}
+                                    className="w-full accent-blue-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Arredondamento: {config.bubbleRadius}px
+                                </label>
+                                <input
+                                    type="range"
+                                    name="bubbleRadius"
+                                    min="8"
+                                    max="32"
+                                    step="2"
+                                    value={config.bubbleRadius}
+                                    onChange={handleChange}
+                                    className="w-full accent-blue-600"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                            <h4 className="md:col-span-2 font-semibold text-sm text-gray-700">Área das respostas e opções</h4>
+                            <ColorField
+                                label="Fundo da área de respostas"
+                                name="responseAreaColor"
+                                value={config.responseAreaColor}
+                                onChange={handleChange}
+                            />
+                            <ColorField
+                                label="Borda da área de respostas"
+                                name="responseAreaBorderColor"
+                                value={config.responseAreaBorderColor}
+                                onChange={handleChange}
+                            />
+                            <ColorField
+                                label="Fundo dos cartões de opções"
+                                name="responseOptionColor"
+                                value={config.responseOptionColor}
+                                onChange={handleChange}
+                            />
+                            <ColorField
+                                label="Borda dos cartões de opções"
+                                name="responseOptionBorderColor"
+                                value={config.responseOptionBorderColor}
+                                onChange={handleChange}
+                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Espessura da borda da área: {config.responseAreaBorderWidth}px
+                                </label>
+                                <input
+                                    type="range"
+                                    name="responseAreaBorderWidth"
+                                    min="0"
+                                    max="4"
+                                    step="1"
+                                    value={config.responseAreaBorderWidth}
+                                    onChange={handleChange}
+                                    className="w-full accent-blue-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Espessura da borda das opções: {config.responseOptionBorderWidth}px
+                                </label>
+                                <input
+                                    type="range"
+                                    name="responseOptionBorderWidth"
+                                    min="0"
+                                    max="4"
+                                    step="1"
+                                    value={config.responseOptionBorderWidth}
+                                    onChange={handleChange}
+                                    className="w-full accent-blue-600"
                                 />
                             </div>
                         </div>
@@ -409,7 +547,12 @@ const ChatSettings = () => {
                                 )}
                                 <div 
                                     className={`p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tl-none' : ''}`}
-                                    style={{ backgroundColor: config.botBubbleColor, color: config.botTextColor }}
+                                    style={{
+                                        backgroundColor: config.botBubbleColor,
+                                        color: config.botTextColor,
+                                        border: `${config.bubbleBorderWidth}px solid ${config.botBubbleBorderColor}`,
+                                        borderRadius: `0 ${config.bubbleRadius}px ${config.bubbleRadius}px ${config.bubbleRadius}px`
+                                    }}
                                 >
                                     <p>{getPreviewMessage('previewWelcome', config.assistantName)}</p>
                                 </div>
@@ -419,7 +562,12 @@ const ChatSettings = () => {
                             <div className="flex justify-end gap-2">
                                 <div 
                                     className={`p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tr-none' : ''}`}
-                                    style={{ backgroundColor: config.userBubbleColor, color: config.userTextColor }}
+                                    style={{
+                                        backgroundColor: config.userBubbleColor,
+                                        color: config.userTextColor,
+                                        border: `${config.bubbleBorderWidth}px solid ${config.userBubbleBorderColor}`,
+                                        borderRadius: `${config.bubbleRadius}px 0 ${config.bubbleRadius}px ${config.bubbleRadius}px`
+                                    }}
                                 >
                                     <p>{getPreviewMessage('previewUserMessage')}</p>
                                 </div>
@@ -442,7 +590,12 @@ const ChatSettings = () => {
                                 <div className="space-y-2 max-w-[85%]">
                                     <div 
                                         className={`p-3 rounded-2xl rounded-tl-none text-sm shadow-sm ${isFeminine ? 'rounded-3xl rounded-tl-none' : ''}`}
-                                        style={{ backgroundColor: config.botBubbleColor, color: config.botTextColor }}
+                                        style={{
+                                            backgroundColor: config.botBubbleColor,
+                                            color: config.botTextColor,
+                                            border: `${config.bubbleBorderWidth}px solid ${config.botBubbleBorderColor}`,
+                                            borderRadius: `0 ${config.bubbleRadius}px ${config.bubbleRadius}px ${config.bubbleRadius}px`
+                                        }}
                                     >
                                         <p>{getPreviewMessage('previewBotResponse')}</p>
                                     </div>
@@ -465,19 +618,38 @@ const ChatSettings = () => {
                         </div>
 
                         {/* Chat Input */}
-                        <div className="bg-white p-3 border-t flex items-center gap-2">
-                            <input 
-                                type="text" 
-                                placeholder="Digite sua mensagem..." 
-                                className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-300"
-                                disabled
-                            />
-                            <button 
-                                className="p-2 rounded-full text-white"
-                                style={{ backgroundColor: config.buttonColor }}
+                        <div
+                            className="p-3 border-t space-y-2"
+                            style={{
+                                backgroundColor: config.responseAreaColor,
+                                borderTop: `${config.responseAreaBorderWidth}px solid ${config.responseAreaBorderColor}`
+                            }}
+                        >
+                            <button
+                                className="w-full p-2 text-left text-xs shadow-sm"
+                                style={{
+                                    backgroundColor: config.responseOptionColor,
+                                    border: `${config.responseOptionBorderWidth}px solid ${config.responseOptionBorderColor}`,
+                                    borderRadius: `${config.bubbleRadius}px`,
+                                    color: config.headerTextColor
+                                }}
                             >
-                                <Send size={16} />
+                                Opção de resposta do cliente
                             </button>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Digite sua mensagem..."
+                                    className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-300"
+                                    disabled
+                                />
+                                <button
+                                    className="p-2 rounded-full text-white"
+                                    style={{ backgroundColor: config.buttonColor }}
+                                >
+                                    <Send size={16} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <p className="text-center text-xs text-gray-500">Visualização aproximada em dispositivo móvel</p>

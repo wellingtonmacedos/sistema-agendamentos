@@ -55,8 +55,18 @@ const salonSchema = new mongoose.Schema({
   chatConfig: {
     botBubbleColor: { type: String, default: '#F3F4F6' }, // Gray-100
     botTextColor: { type: String, default: '#1F2937' },   // Gray-800
+    botBubbleBorderColor: { type: String, default: '#E2E8F0' },
     userBubbleColor: { type: String, default: '#3B82F6' }, // Blue-500
     userTextColor: { type: String, default: '#FFFFFF' },   // White
+    userBubbleBorderColor: { type: String, default: '#2563EB' },
+    bubbleBorderWidth: { type: Number, default: 1 },
+    bubbleRadius: { type: Number, default: 16 },
+    responseAreaColor: { type: String, default: '#FFFFFF' },
+    responseAreaBorderColor: { type: String, default: '#E2E8F0' },
+    responseAreaBorderWidth: { type: Number, default: 1 },
+    responseOptionColor: { type: String, default: '#FFFFFF' },
+    responseOptionBorderColor: { type: String, default: '#E2E8F0' },
+    responseOptionBorderWidth: { type: Number, default: 1 },
     buttonColor: { type: String, default: '#3B82F6' },     // Blue-500
     backgroundColor: { type: String, default: '#F9FAFB' }, // Gray-50
     headerColor: { type: String, default: '#FFFFFF' },     // White
